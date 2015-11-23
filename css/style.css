@@ -1,0 +1,28 @@
+#map {
+	height: 100%;
+}
+
+.container-fluid {
+	height: 100%;
+	padding: 0;
+}
+
+.form-control {
+	width: 95%;
+	margin: 0 auto;
+	margin-top: 15px;
+}
+
+.list-group {
+	width: 95%;
+	margin: 0 auto;
+	margin-top: 15px;
+}
+
+button.list-group-item {
+	text-align: center;
+}
+
+.navbar-brand {
+	margin-left: 50px;
+}
