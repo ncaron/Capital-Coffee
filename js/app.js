@@ -2,10 +2,7 @@
 
 var map;
 
-// TODO: Change coordinates
 var mapOptions = {
-	zoom: 15,
-	center: {lat: 45.419228, lng: -75.6931989},
 	mapTypeControlOptions: {position: google.maps.ControlPosition.TOP_RIGHT}
 }
 
@@ -60,12 +57,27 @@ var Place = function(data) {
 
 var ViewModel = function() {
 	var self = this;
+	var bounds = new google.maps.LatLngBounds();
 	
 	this.placeList = ko.observableArray([]);
+	this.latLngList = ko.observableArray([]);
 	
 	places.forEach(function(placeItem) {
 		self.placeList.push(new Place(placeItem));
 	});
+	
+	// Populates the latLntList array with the location of all markers
+	for (var i = 0; i < self.placeList().length; i++) {
+		self.latLngList.push(new google.maps.LatLng(self.placeList()[i].latitude(), self.placeList()[i].longitude()));
+	}
+	
+	// Extends the bounds of the map to fit all markers
+	for (var i = 0, latLngLen = self.latLngList().length; i < latLngLen; i++) {
+		bounds.extend(self.latLngList()[i]);
+	}
+	
+	// Displays the map with bounds
+	map.fitBounds(bounds);
 	
 	// Adds an event listener to all markers to toggle bounce on click
 	for (var i = 0; i < self.placeList().length; i++) {
