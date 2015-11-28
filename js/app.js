@@ -19,35 +19,40 @@ map = new google.maps.Map(document.getElementById('map'), mapOptions);
 var places = [
 	{
 		name: 'Byward Market',
-		longitude: 45.427655,
-		latitude: -75.692391
+		latitude: 45.427655,
+		longitude: -75.692391
 	},
 	{
 		name: 'Parliament of Canada',
-		longitude: 45.425118,
-		latitude: -75.699917
+		latitude: 45.425118,
+		longitude: -75.699917
 	},
 	{
 		name: 'University of Ottawa',
-		longitude: 45.423126,
-		latitude: -75.683108
+		latitude: 45.423126,
+		longitude: -75.683108
 	},
 	{
 		name: 'Canadian War Museum',
-		longitude: 45.417107,
-		latitude: -75.716942
+		latitude: 45.417107,
+		longitude: -75.716942
 	},
 	{
 		name: 'National Gallery of Canada',
-		longitude: 45.429537,
-		latitude: -75.698903
+		latitude: 45.429537,
+		longitude: -75.698903
 	}
 ];
 
 var Place = function(data) {
 	this.name = ko.observable(data.name);
-	this.longitude = ko.observable(data.longitude);
 	this.latitude = ko.observable(data.latitude);
+	this.longitude = ko.observable(data.longitude);
+	this.marker = new google.maps.Marker({
+		position: {lat: this.latitude(), lng: this.longitude()},
+		map: map,
+		animation: null
+	});
 };
 
 
@@ -61,7 +66,34 @@ var ViewModel = function() {
 	places.forEach(function(placeItem) {
 		self.placeList.push(new Place(placeItem));
 	});
-
+	
+	// Adds an event listener to all markers to toggle bounce on click
+	for (var i = 0; i < self.placeList().length; i++) {
+		self.placeList()[i].marker.addListener('click', (function(markerCopy) {
+			return function() {
+				self.toggleBounce(markerCopy);
+			};
+		})(i))
+	}
+	
+	// Toggles the bounce animation if a marker is clicked or list item is clicked
+	self.toggleBounce = function(index) {
+		for (var i = 0; i < self.placeList().length; i++) {
+			if (i !== index) {
+				if (self.placeList()[i].marker.getAnimation() !== null) {
+					self.placeList()[i].marker.setAnimation(null);
+				}
+			}
+			else {
+				if (self.placeList()[index].marker.getAnimation() !== null) {
+					self.placeList()[index].marker.setAnimation(null);
+				}
+				else {
+					self.placeList()[index].marker.setAnimation(google.maps.Animation.BOUNCE);
+				}
+			}
+		}
+	};
 };
 
 
