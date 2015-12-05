@@ -97,8 +97,14 @@ var ViewModel = function() {
 		}
 		
 		// Displays markers in the markerList array to the map
+		// Adds an event listener to all markers in the markerList array
 		for (var i = 0; i < self.markerList().length; i++) {
 			self.markerList()[i].setMap(map);
+			self.markerList()[i].addListener('click', (function(markerCopy) {
+				return function() {
+					self.toggleBounce(markerCopy);
+				};
+			})(i))
 		}
 	}, self);
 	
@@ -119,33 +125,21 @@ var ViewModel = function() {
 	// Displays the map with bounds
 	map.fitBounds(bounds);
 	
-	/* == Event Listeners == */
-	// Adds an event listener to all markers to toggle bounce on click
-	// TODO: FIX
-	/*
-	for (var i = 0; i < self.placeList().length; i++) {
-		self.placeList()[i].marker.addListener('click', (function(markerCopy) {
-			return function() {
-				self.toggleBounce(markerCopy);
-			};
-		})(i))
-	}
-	*/
-	
+	/* == Bounce == */
 	// Toggles the bounce animation if a marker is clicked or list item is clicked
 	self.toggleBounce = function(index) {
-		for (var i = 0; i < self.placeList().length; i++) {
+		for (var i = 0; i < self.markerList().length; i++) {
 			if (i !== index) {
-				if (self.placeList()[i].marker.getAnimation() !== null) {
-					self.placeList()[i].marker.setAnimation(null);
+				if (self.markerList()[i].getAnimation() !== null) {
+					self.markerList()[i].setAnimation(null);
 				}
 			}
 			else {
-				if (self.placeList()[index].marker.getAnimation() !== null) {
-					self.placeList()[index].marker.setAnimation(null);
+				if (self.markerList()[index].getAnimation() !== null) {
+					self.markerList()[index].setAnimation(null);
 				}
 				else {
-					self.placeList()[index].marker.setAnimation(google.maps.Animation.BOUNCE);
+					self.markerList()[index].setAnimation(google.maps.Animation.BOUNCE);
 				}
 			}
 		}
