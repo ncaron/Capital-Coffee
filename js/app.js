@@ -64,6 +64,7 @@ var ViewModel = function() {
 	self.searchValue = ko.observable('');
 	self.filteredList = ko.observableArray([]);
 	self.markerList = ko.observableArray([]);
+	self.latLngList = ko.observableArray([]);
 	
 	self.filter = ko.computed(function() {
 		// If nothing is searched for, populate the filteredList array with all items
@@ -88,12 +89,21 @@ var ViewModel = function() {
 		}
 		self.markerList([]);
 		
-		// Pushes the markers matching the string to the markerList array
-		for (var i = 0; i < self.filteredList().length; i++) {
-			self.markerList().push(new google.maps.Marker({
-				position: {lat: self.filteredList()[i].latitude(), lng: self.filteredList()[i].longitude()},
-				animation: null
-			}));
+		// If search returns no results(length of filteredList = 0), does not change center and zoom level of the map
+		if (self.filteredList().length != 0) {
+			// Resets the latLngList array and bounds for the new search term
+			self.latLngList([]);
+			self.bounds = new google.maps.LatLngBounds();
+			
+			// Pushes the markers matching the string to the markerList array
+			for (var i = 0; i < self.filteredList().length; i++) {
+				self.markerList().push(new google.maps.Marker({
+					position: {lat: self.filteredList()[i].latitude(), lng: self.filteredList()[i].longitude()},
+					animation: null
+				}));
+				// Pushes the bounds of the current markers to the latLntList array
+				self.latLngList.push(new google.maps.LatLng(self.filteredList()[i].latitude(), self.filteredList()[i].longitude()));
+			}
 		}
 		
 		// Displays markers in the markerList array to the map
@@ -106,25 +116,25 @@ var ViewModel = function() {
 				};
 			})(i))
 		}
+		
+		// Changes the bounds for every marker added/removed from the map
+		for (var i = 0, latLngLen = self.latLngList().length; i < latLngLen; i++) {
+			self.bounds.extend(self.latLngList()[i]);
+		}
+		
+		// Prevents map from zooming too far if only 1 marker is on the map
+		// Help from: http://stackoverflow.com/questions/3334729
+		if (self.bounds.getNorthEast().equals(self.bounds.getSouthWest())) {
+			self.point1 = new google.maps.LatLng(self.bounds.getNorthEast().lat() + 0.01, self.bounds.getNorthEast().lng() + 0.01);
+			self.point2 = new google.maps.LatLng(self.bounds.getNorthEast().lat() - 0.01, self.bounds.getNorthEast().lng() - 0.01);
+			self.bounds.extend(self.point1);
+			self.bounds.extend(self.point2);
+		}
+		
+		// Sets the center and zoom level of the map according to the bounds
+		map.fitBounds(self.bounds);
 	}, self);
-	
-	/* == Maps Bounds == */
-	var bounds = new google.maps.LatLngBounds();
-	self.latLngList = ko.observableArray([]);
-	
-	// Populates the latLntList array with the location of all markers
-	for (var i = 0; i < self.placeList().length; i++) {
-		self.latLngList.push(new google.maps.LatLng(self.placeList()[i].latitude(), self.placeList()[i].longitude()));
-	}
-	
-	// Extends the bounds of the map to fit all markers
-	for (var i = 0, latLngLen = self.latLngList().length; i < latLngLen; i++) {
-		bounds.extend(self.latLngList()[i]);
-	}
-	
-	// Displays the map with bounds
-	map.fitBounds(bounds);
-	
+		
 	/* == Bounce == */
 	// Toggles the bounce animation if a marker is clicked or list item is clicked
 	self.toggleBounce = function(index) {
