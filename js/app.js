@@ -57,14 +57,39 @@ var Place = function(data) {
 
 var ViewModel = function() {
 	var self = this;
-	var bounds = new google.maps.LatLngBounds();
-	
-	this.placeList = ko.observableArray([]);
-	this.latLngList = ko.observableArray([]);
+
+	/* == List of Places == */
+	self.placeList = ko.observableArray([]);
 	
 	places.forEach(function(placeItem) {
 		self.placeList.push(new Place(placeItem));
 	});
+	
+	/* == Filter == */
+	self.searchValue = ko.observable('');
+	self.filteredList = ko.observableArray([]);
+	
+	self.filter = ko.computed(function() {
+		// If nothing is searched for, populate the filteredList array with all items
+		if (self.searchValue() == '') {
+			self.filteredList(self.placeList());
+		}
+		// Clears the filteredlist array and populates it with names of matching search string
+		else {
+			self.filteredList([]);
+			for (var i = 0; i < self.placeList().length; i++) {
+				// Place name and search string convertedto lower case for easier searching
+				var name = self.placeList()[i].name().toLowerCase();
+				if (name.includes(self.searchValue().toLowerCase())) {
+					self.filteredList.push(self.placeList()[i]);
+				}
+			}
+		}
+	}, self);
+	
+	/* == Maps Bounds == */
+	var bounds = new google.maps.LatLngBounds();
+	self.latLngList = ko.observableArray([]);
 	
 	// Populates the latLntList array with the location of all markers
 	for (var i = 0; i < self.placeList().length; i++) {
@@ -79,6 +104,7 @@ var ViewModel = function() {
 	// Displays the map with bounds
 	map.fitBounds(bounds);
 	
+	/* == Event Listeners == */
 	// Adds an event listener to all markers to toggle bounce on click
 	for (var i = 0; i < self.placeList().length; i++) {
 		self.placeList()[i].marker.addListener('click', (function(markerCopy) {

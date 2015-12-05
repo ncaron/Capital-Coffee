@@ -17,9 +17,9 @@
 		<div class="container">
 			<div class="navmenu navmenu-default navmenu-fixed-left offcanvas-sm">
 				<a class="navmenu-brand visible-md visible-lg text-center" href="https://github.com/ncaron/Neighbourhood-Map" target="_blank">Neighbourhood Map</a>
-				<input type="search" class="form-control text-center" placeholder="Search">
+				<input type="search" class="form-control text-center" placeholder="Search" data-bind="textInput: searchValue">
 				<!-- Knockout binding to loop through placeList -->
-				<div class="list-group" data-bind="foreach: placeList">
+				<div class="list-group" data-bind="foreach: filteredList">
 					<!-- Knockout binding sets # of buttons = # 'placeList' and sets the text of 'placeList' 'name' -->
 					<!-- First is visible on mobile only and can click items to close the menu -->
 					<!-- Second is visible on desktop only -->
