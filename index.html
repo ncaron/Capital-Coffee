@@ -23,8 +23,8 @@
 					<!-- Knockout binding sets # of buttons = # 'placeList' and sets the text of 'placeList' 'name' -->
 					<!-- First is visible on mobile only and can click items to close the menu -->
 					<!-- Second is visible on desktop only -->
-					<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="text: name, click: $root.toggleBounce.bind($data, $index())"></button>
-					<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="text: name, click: $root.toggleBounce.bind($data, $index())"></button>
+					<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="text: name, click: $root.toggle.bind($data, $index())"></button>
+					<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="text: name, click: $root.toggle.bind($data, $index())"></button>
 				</div>
 			</div>
 		</div>

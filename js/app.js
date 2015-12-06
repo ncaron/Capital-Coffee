@@ -114,6 +114,7 @@ var ViewModel = function() {
 			self.markerList()[i].addListener('click', (function(markerCopy) {
 				return function() {
 					self.toggleBounce(markerCopy);
+					self.toggleWindow(markerCopy);
 				};
 			})(i))
 		}
@@ -136,6 +137,12 @@ var ViewModel = function() {
 		map.fitBounds(self.bounds);
 	}, self);
 		
+	// Triggers toggleBounce and toggleWindow when the button is clicked on in the list view
+	self.toggle = function(index) {
+		self.toggleBounce(index);
+		self.toggleWindow(index);
+	};
+	
 	/* == Bounce == */
 	// Toggles the bounce animation if a marker is clicked or list item is clicked
 	self.toggleBounce = function(index) {
@@ -153,6 +160,36 @@ var ViewModel = function() {
 					self.markerList()[index].setAnimation(google.maps.Animation.BOUNCE);
 				}
 			}
+		}
+	};
+	
+	/* == Info Window == */
+	// Toggles the info window
+	self.toggleWindow = function(index) {
+		self.markerAnimation = self.markerList()[index].getAnimation();
+		
+		// If info window is opened when another wants to open, close it
+		if (self.infowindow != null) {
+			self.infowindow.close();
+		}
+		
+		// Sets the new info window with the name of the place.
+		// Temporary. Replace with AJAX?
+		self.infowindow = new google.maps.InfoWindow({
+			content: self.filteredList()[index].name()
+		});
+		
+		// Opens the info window
+		self.infowindow.open(map, self.markerList()[index]);
+		
+		// If the x button on the info window is clicked, stop the bounce animation for corresponsind marker
+		self.infowindow.addListener('closeclick', function() {
+			self.markerList()[index].setAnimation(null);
+		});
+		
+		// If bounce animation stops, close the infow window
+		if (self.markerAnimation == null) {
+			self.infowindow.close();
 		}
 	};
 };
