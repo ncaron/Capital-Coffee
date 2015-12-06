@@ -99,6 +99,7 @@ var ViewModel = function() {
 			for (var i = 0; i < self.filteredList().length; i++) {
 				self.markerList().push(new google.maps.Marker({
 					position: {lat: self.filteredList()[i].latitude(), lng: self.filteredList()[i].longitude()},
+					title: self.filteredList()[i].name(),
 					animation: null
 				}));
 				// Pushes the bounds of the current markers to the latLntList array
