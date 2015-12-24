@@ -16,15 +16,17 @@
 		<!-- Responsive menu -->
 		<div class="container">
 			<div class="navmenu navmenu-default navmenu-fixed-left offcanvas-sm">
-				<a class="navmenu-brand visible-md visible-lg text-center" href="https://github.com/ncaron/Neighbourhood-Map" target="_blank">Neighbourhood Map</a>
+				<a class="navmenu-brand visible-md visible-lg text-center" href="https://github.com/ncaron/Neighbourhood-Map" target="_blank">Capital Coffee</a>
 				<input type="search" class="form-control text-center" placeholder="Search" data-bind="textInput: searchValue">
-				<!-- Knockout binding to loop through placeList -->
+				<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.back">BACK</button>
+				<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="click: $root.back">BACK</button>
+				<!-- Knockout binding to loop through filteredList -->
 				<div class="list-group" data-bind="foreach: filteredList">
-					<!-- Knockout binding sets # of buttons = # 'placeList' and sets the text of 'placeList' 'name' -->
+					<!-- Knockout binding sets # of buttons = # 'filteredList' and sets the text of 'filteredList' 'name' -->
 					<!-- First is visible on mobile only and can click items to close the menu -->
 					<!-- Second is visible on desktop only -->
-					<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="text: name, click: $root.toggle.bind($data, $index())"></button>
-					<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="text: name, click: $root.toggle.bind($data, $index())"></button>
+					<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="text: name, click: $root.onListClick.bind($data, $index())"></button>
+					<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="text: name, click: $root.onListClick.bind($data, $index())"></button>
 				</div>
 			</div>
 		</div>
@@ -37,7 +39,7 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="https://github.com/ncaron/Neighbourhood-Map" target="_blank">Neighbourhood Map</a>
+			<a class="navbar-brand" href="https://github.com/ncaron/Neighbourhood-Map" target="_blank">Capital Coffee</a>
 		</div>
 		</div>
 		

@@ -11,6 +11,7 @@
 	width: 95%;
 	margin: 0 auto;
 	margin-top: 15px;
+	margin-bottom: 15px;
 }
 
 .list-group {
@@ -25,4 +26,17 @@ button.list-group-item {
 
 .navbar-brand {
 	margin-left: 50px;
+}
+
+.gm-style-iw {
+	width: 1000px;
+}
+
+#iw-title {
+	font-size: 20px;
+	font-weight: 400;
+}
+
+#map img {
+	max-width: none;
 }
