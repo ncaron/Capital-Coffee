@@ -42,6 +42,7 @@ var ViewModel = function() {
     	// If a city has been clicked and nothing was searched for, populate the list with all coffee shops from this capital
     	if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
     		self.filteredList(self.coffeeShopList());
+            self.getMarkers();
     	}
     	// If a city has not been clicked and nothing is searched for, populate the list with cities
     	else if (self.coffeeShopList().length == 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
@@ -52,10 +53,11 @@ var ViewModel = function() {
     	else {
     		self.filteredList([]);
 
-    		// If coffeeShopList is bigger than 0, filter coffeShopList
+    		// If coffeeShopList is bigger than 0, filter coffeeShopList
     		// Filter placeList otherwise
     		if (self.coffeeShopList().length != 0) {
     			self.filterCurrentList(self.coffeeShopList());
+                self.getMarkers();
     		}
     		else {
     			self.filterCurrentList(self.placeList());
@@ -84,7 +86,7 @@ var ViewModel = function() {
 
     	self.filteredList(self.placeList());
     	self.coffeeShopList([]);
-    	self.placeMarkers();
+    	self.getMarkers();
     };
 
     /* == Get Coffee == */
@@ -111,53 +113,61 @@ var ViewModel = function() {
 	    			return new CoffeeShops(coffee);
 	    		});
 	    		self.coffeeShopList(mappedCoffeeShopList);
-	    		self.placeMarkers();
 	    		self.filteredList(self.coffeeShopList());
 	    		self.searchValue('');
 	    	});
 	    }
     };
-    
+     
+    /* == Get Markers == */
+    self.getMarkers = function() {
+        // Clears the marketList array to populate it with new markers
+        for (var i = 0; i < self.markerList().length; i++) {
+            self.markerList()[i].setMap(null);
+        }
+        self.markerList([]);
+
+
+        if (self.coffeeShopList().length != 0) {
+            // Populates the marker list with corresponding city/filter
+            for (var i = 0; i < self.filteredList().length; i++) {
+                var coffeeShopName = self.filteredList()[i].name();
+                var coffeeShopPosition = {lat: self.filteredList()[i].latitude(), lng: self.filteredList()[i].longitude()};
+
+                self.markerList().push(new google.maps.Marker({
+                    title: coffeeShopName,
+                    position: coffeeShopPosition,
+                    animation: null
+                }));
+            }
+        }
+
+        self.placeMarkers();
+    };
+
     /* == Place Markers == */
     self.placeMarkers = function() {
-    	// Clears the markerList array to populate it with new city
-    	for (var i = 0; i < self.markerList().length; i++) {
-    		self.markerList()[i].setMap(null);
-    	}
-    	self.markerList([]);
+        if (self.coffeeShopList().length == 0) {
+            map.setCenter(DEFAULT_CENTER);
+            map.setZoom(DEFAULT_ZOOM);
+        }
+        else {
+        // Places the markers on the map
+        for (var i = 0; i < self.markerList().length; i++) {
+            self.markerList()[i].setMap(map);
 
-    	// Only executes if the coffeeShopList is bigger than 0, sets map to default position otherwise.
-    	if (self.coffeeShopList().length != 0) {
-    		// Populates the marker list with corresponding city
-    		for (var i = 0; i < self.coffeeShopList().length; i++) {
-    			var coffeeShopName = self.coffeeShopList()[i].name();
-    			var coffeShopPosition = {lat: self.coffeeShopList()[i].latitude(), lng: self.coffeeShopList()[i].longitude()};
-
-    			self.markerList().push(new google.maps.Marker({
-    				title: coffeeShopName,
-    				position: coffeShopPosition,
-    				animation: null
-    			}));
-    		}
-
-    		// Places the markers on the map
-    		for (var i = 0; i < self.markerList().length; i++) {
-    			self.markerList()[i].setMap(map);
-
-    			self.markerList()[i].addListener('click', (function(markerCopy) {
-    				return function() {
-    					self.toggleBounce(markerCopy);
-    					self.toggleWindow(markerCopy);
-    				};
-    			})(i));
-    		}
-    		self.setBounds();
-    	}
-    	else {
-    		map.setCenter(DEFAULT_CENTER);
-    		map.setZoom(DEFAULT_ZOOM);
-    	}
-    };
+            self.markerList()[i].addListener('click', (function(markerCopy) {
+                return function() {
+                    self.toggleBounce(markerCopy);
+                    self.toggleWindow(markerCopy);
+                };
+            })(i));
+        }
+        if (self.markerList().length != 0) {
+            self.setBounds();
+        }
+    }
+};
 
     self.setBounds = function() {
     	self.latLngList([]);
