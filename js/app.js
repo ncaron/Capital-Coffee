@@ -224,7 +224,8 @@ var ViewModel = function() {
         $.ajax({
             url: venueIdUrl,
             dataType: 'json',
-            success: function(data) {   
+            success: function(data) {
+                console.log(data);
                 // Complete venue details
                 var venue = data.response.responses[0].response.venue;
                 var name = venue.name;
@@ -233,7 +234,14 @@ var ViewModel = function() {
                 var venueHours = data.response.responses[1].response.hours;
 
                 // Displays venue name
-                $('#iw-title').append(name);
+                // Adds link if venue has URL
+                if (venue.hasOwnProperty('url')) {
+                    var venueUrl = venue.url;
+                    $('#iw-title').append('<a href="' + venueUrl + '" target="_blank">' + name + '</a>');
+                }
+                else {
+                    $('#iw-title').append(name);
+                }
 
                 // Displays venue rating
                 if (rating != undefined) {
@@ -300,7 +308,19 @@ var ViewModel = function() {
                     $('#iw-hours ul').remove();
                     $('#iw-hours').append('<p>No information available</p>');
                 }
-            }                             
+
+                // Displays Facebook icon
+                if (venue.contact.hasOwnProperty('facebook')) {
+                    var facebookId = venue.contact.facebook;
+                    $('#iw-social').append('<a href="https://www.facebook.com/' + facebookId + '" target="_blank"><i class="fa fa-facebook-official"></i></a>');
+                }
+
+                // Displays Twitter icon
+                if (venue.contact.hasOwnProperty('twitter')) {
+                    var twitterId = venue.contact.twitter;
+                    $('#iw-social').append('<a href="https://www.twitter.com/' + twitterId + '" target="_blank"><i class="fa fa-twitter"></i></a>');
+                }
+            }
         });
 
         // Clicking outside the map closes the info window and stops marker animation
@@ -353,6 +373,9 @@ var ViewModel = function() {
                                              '<li id="sun"><span>Sunday</span><div>CLOSED</div></li>' +
                                          '</ul>' +
                                      '</div>' +
+                                 '</div>' +
+                                 '<div class="row">' +
+                                     '<div class="col-md-12" id="iw-social">' +
                                  '</div>' +
                              '</div>' +
                          '</div>' +
