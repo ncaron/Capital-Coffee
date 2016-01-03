@@ -28,15 +28,6 @@ button.list-group-item {
 	margin-left: 50px;
 }
 
-.gm-style-iw {
-	width: 1000px;
-}
-
-#iw-title {
-	font-size: 20px;
-	font-weight: 400;
-}
-
 #map img {
 	max-width: none;
 }

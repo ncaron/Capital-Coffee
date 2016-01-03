@@ -1,0 +1,61 @@
+.gm-style-iw:nth-child(2)  {
+	top: 23px !important;
+	width: 100% !important;
+}
+
+#iw-title {
+	font-size: 30px;
+	font-weight: 400;
+	color: aliceblue;
+	text-align: center;
+	background-color: orange;
+}
+
+#iw-rating {
+	font-size: 20px;
+	font-weight: 400;
+	color: aliceblue;
+	text-align: center;
+	background-color: orange;
+	border-bottom: 2px solid orange;
+	width: 100%;
+}
+
+#iw-photo {
+	padding: 0px;
+}
+
+#iw-isOpen {
+	text-align: center;
+	font-size: 20px;
+	font-weight: bolder;
+	margin-bottom: 0px;
+}
+
+#iw-status {
+	text-align: center;
+	font-size: 15px;
+	margin-bottom: 15px;
+}
+
+#iw-hoursOO {
+	font-size: 20px;
+	font-weight: bolder;
+	text-align: center;
+	text-decoration: underline;
+}
+
+ul {
+	list-style-type: none;
+	padding-left: 0px;
+}
+
+li div {
+	float: right;
+}
+
+.iw-container {
+	background-color: white;
+	border: 2px solid orange;
+	border-radius: 5px;
+}
