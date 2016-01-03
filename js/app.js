@@ -224,9 +224,7 @@ var ViewModel = function() {
         $.ajax({
             url: venueIdUrl,
             dataType: 'json',
-            success: function(data) {
-                console.log(data);
-                
+            success: function(data) {   
                 // Complete venue details
                 var venue = data.response.responses[0].response.venue;
                 var name = venue.name;
