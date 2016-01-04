@@ -41,3 +41,16 @@ button.list-group-item {
 #map img {
 	max-width: none;
 }
+
+/* Rest Countries/Foursquare API Error */
+.apiError {
+	font-size: 15px;
+	text-align: center;
+	margin-top: 15px;
+}
+
+/* Map error */
+.mapError {
+	font-size: 100px;
+	text-align: center;
+}
