@@ -115,9 +115,45 @@ hr {
 	margin: 10px 0px;
 }
 
+/* CONTACT */
+#iw-contact {
+	font-size: 20px;
+	font-weight: bolder;
+	text-align: center;
+	text-decoration: underline;
+	margin-top: 10px;
+}
+
+.fa-phone-square {
+	font-size: 50px;
+	color: #795548;
+}
+
+#iw-phoneIcon {
+	text-align: left;
+}
+
+#iw-phoneNum p {
+	font-size: 15px;
+	text-align: left;
+	margin-bottom: 0px;
+	height: 50px;
+	line-height: 50px;
+}
+
 /* SOCIAL */
-#iw-social a {
-	padding: 0px 5px 0px 5px;
+#iw-social {
+	text-align: left;
+	margin-top: 10px;
+}
+
+.fa {
+	margin-right: 20px;
+}
+
+.fa-foursquare {
+	color: #f94877;
+	font-size: 47px;
 }
 
 .fa-facebook-official {
@@ -130,10 +166,30 @@ hr {
 	font-size: 50px;
 }
 
+/* LOCATION */
+#iw-location {
+	font-size: 20px;
+	font-weight: bolder;
+	text-align: center;
+	text-decoration: underline;
+	margin-top: 10px;
+}
+
+#iw-formattedAddress p {
+	font-size: 15px;
+}
+
+/* LOADING CONTENT */
+.loading {
+	font-size: 50px;
+	text-align: center;
+}
+
 .iw-container {
 	background-color: white;
 	border: 2px solid orange;
 	border-radius: 5px;
+	min-height: 100px;
 	max-height: 575px;
-	overflow: auto;
+	overflow-y: auto;
 }

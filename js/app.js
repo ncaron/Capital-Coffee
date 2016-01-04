@@ -1,17 +1,26 @@
 /* ===== Map ===== */
-
+var google;
 var map;
 var DEFAULT_CENTER = {lat: 47, lng: 23};
 var DEFAULT_ZOOM = 5;
 
-// TODO: Change coordinates
-var mapOptions = {
-	zoom: DEFAULT_ZOOM,
-	center: DEFAULT_CENTER,
-	mapTypeControlOptions: {position: google.maps.ControlPosition.TOP_RIGHT}
-};
+// Handle error if map cannot be loaded
+if (google == undefined) {
+    $('.mapError').html('<p>Google Maps API cannot be reached. Please try again later.</p>');
+}
+else {
+    $('.mapError').remove();
 
-map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    var mapOptions = {
+        zoom: DEFAULT_ZOOM,
+        center: DEFAULT_CENTER,
+        mapTypeControlOptions: {position: google.maps.ControlPosition.TOP_RIGHT}
+    };
+
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+}
+
+
 
 // The capital city
 var Place = function(data) {
@@ -34,6 +43,7 @@ var ViewModel = function() {
     self.markerList = ko.observableArray([]);
     self.latLngList = ko.observableArray([]);
     self.idList = ko.observableArray([]);
+    self.foursquareError = ko.observable();
 
     // Needed for Foursquare API
     var clientId = '5PLNSFDCFOXXWLZOHDRG33R3PLP5OULVV0NQDPLZMOCON3OL';
@@ -46,8 +56,12 @@ var ViewModel = function() {
     self.filteredList = ko.observableArray([]);
 
     self.filter = ko.computed(function() {
+        if (self.foursquareError() == true) {
+            self.filteredList([]);
+            self.foursquareError(false);
+        }
     	// If a city has been clicked and nothing was searched for, populate the list with all coffee shops from this capital
-    	if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
+    	else if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
     		self.filteredList(self.coffeeShopList());
             self.getMarkers();
     	}
@@ -97,6 +111,9 @@ var ViewModel = function() {
     	self.filteredList(self.placeList());
     	self.coffeeShopList([]);
     	self.getMarkers();
+
+        // Removes error message
+        $('.apiError').html('');
     };
 
     /* == Get Coffee == */
@@ -121,7 +138,13 @@ var ViewModel = function() {
 	    		self.coffeeShopList(mappedCoffeeShopList);
 	    		self.filteredList(self.coffeeShopList());
 	    		self.searchValue('');
-	    	});
+	    	})
+            .fail(function() {
+                self.foursquareError(true);
+                var foursquareErrorMsg = 'Foursquare API cannot be reached. Please try again later.';
+
+                $('.apiError').append(foursquareErrorMsg);
+            });
 	    }
     };
      
@@ -213,6 +236,7 @@ var ViewModel = function() {
     /* == Info Window == */
     self.toggleWindow = function(index) {
         var venueId = self.idList()[index].venueId();
+        var venueError;
 
         // URL to get complete venue details
         var getVenue = '/venues/' + venueId;
@@ -225,7 +249,9 @@ var ViewModel = function() {
             url: venueIdUrl,
             dataType: 'json',
             success: function(data) {
-                console.log(data);
+                venueError = false;
+                self.getIwContent(venueError);
+
                 // Complete venue details
                 var venue = data.response.responses[0].response.venue;
                 var name = venue.name;
@@ -235,6 +261,9 @@ var ViewModel = function() {
                 var venueDescription;
                 var tipCount = venue.tips.groups[0].count;
                 var tips;
+                var canonicalUrl = venue.canonicalUrl;
+                var phone;
+                var formattedAddress;
 
                 // Displays venue name
                 // Adds link if venue has URL
@@ -334,7 +363,22 @@ var ViewModel = function() {
                     $('#iw-tips').prepend('<p class="hasTips">What others have to say</p>');
                 }
 
-                /*// Displays Facebook icon
+                // Displays phone number
+                // Remove the divs otherwise
+                if (venue.contact.hasOwnProperty('formattedPhone')) {
+                    phone = venue.contact.formattedPhone;
+                    $('#iw-phoneIcon').append('<i class="fa fa-phone-square"></i>');
+                    $('#iw-phoneNum').append('<p>' + phone + '</p>');
+                }
+                else {
+                    $('#iw-phoneIcon').remove();
+                    $('#iw-phoneNum').remove();
+                }
+
+                // Displays Foursquare icon
+                $('#iw-social').append('<a href="' + canonicalUrl + '" target="_blank"><i class="fa fa-foursquare"></i></a>');
+
+                // Displays Facebook icon
                 if (venue.contact.hasOwnProperty('facebook')) {
                     var facebookId = venue.contact.facebook;
                     $('#iw-social').append('<a href="https://www.facebook.com/' + facebookId + '" target="_blank"><i class="fa fa-facebook-official"></i></a>');
@@ -344,16 +388,25 @@ var ViewModel = function() {
                 if (venue.contact.hasOwnProperty('twitter')) {
                     var twitterId = venue.contact.twitter;
                     $('#iw-social').append('<a href="https://www.twitter.com/' + twitterId + '" target="_blank"><i class="fa fa-twitter"></i></a>');
-                }*/
+                }
+
+                if (venue.location.hasOwnProperty('formattedAddress')) {
+                    for (var i = 0; i < venue.location.formattedAddress.length; i++) {
+                        formattedAddress = venue.location.formattedAddress[i];
+                        $('#iw-formattedAddress').append('<p>' + formattedAddress + '</p>');
+                    }
+                }
             }
+        })
+        .fail(function() {
+            venueError = true;
+            self.getIwContent(venueError, index);
         });
 
         // Clicking outside the map closes the info window and stops marker animation
-        // Sets the bounds again
         map.addListener('click', function() {
             self.infowindow.close();
             self.markerList()[index].setAnimation(null);
-            self.setBounds();
         });
 
     	self.markerAnimation = self.markerList()[index].getAnimation();
@@ -367,48 +420,9 @@ var ViewModel = function() {
     	self.infowindow = new google.maps.InfoWindow({
             content: '<div class="container iw-container">' + // .container .iw-container
                          '<div class="row">' +
-                             '<div class="col-md-12" id="iw-title"></div>' + // #iw-title
-                         '</div>' +
-                         '<div class="row">' +
-                                 '<div class="col-md-2" id="iw-rating"></div>' + // #iw-rating
-                         '</div>' +
-                         '<div class="row">' +
-                             '<div class="col-md-7" id="iw-photo"></div>' + // #iw-photo
-                             '<div class="col-md-5" id="hasPhoto">' + // #iw-hasPhoto
-                                 '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-isOpen"></div>' + // #iw-isOpen
-                                 '</div>' +
-                                 '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-status"></div>' + // #iw-status
-                                 '</div>' +
-                                 '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-hoursOO">' + // #iw-hoursOO
-                                         '<p>Hours of Operation</p>' +
-                                     '</div>' + // End #iw-hoursOO
-                                 '</div>' +
-                                 '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-hours">' + // #iw-hours
-                                         '<ul>' +
-                                             '<li id="mon"><span>Monday</span><div>CLOSED</div></li>' +
-                                             '<li id="tue"><span>Tuesday</span><div>CLOSED</div></li>' +
-                                             '<li id="wed"><span>Wednesday</span><div>CLOSED</div></li>' +
-                                             '<li id="thu"><span>Thursday</span><div>CLOSED</div></li>' +
-                                             '<li id="fri"><span>Friday</span><div>CLOSED</div></li>' +
-                                             '<li id="sat"><span>Saturday</span><div>CLOSED</div></li>' +
-                                             '<li id="sun"><span>Sunday</span><div>CLOSED</div></li>' +
-                                         '</ul>' +
-                                     '</div>' + // End #iw-hours
-                                 '</div>' +
-                                 '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-social"></div>' + // #iw-social
-                                 '</div>' +
-                             '</div>' + // End #iw-hasPhoto
-                         '</div>' +
-                         '<div class="row">' +
-                             '<div class="col-md-12" id="iw-description"></div>' + // #iw-description
-                         '</div>' +
-                         '<div class="row">' +
-                             '<div class="col-md-12" id="iw-tips"></div>' + // #iw-tips
+                             '<div class="col-md-12 loading">'+
+                                 '<i class="fa fa-spinner fa-spin"></i>' +
+                             '</div>' +
                          '</div>' +
                       '</div>' // End .container .iw-container
     	});
@@ -436,6 +450,94 @@ var ViewModel = function() {
     	if (self.markerAnimation == null) {
     		self.infowindow.close();
     	}
+
+        // Sets content to display in info window
+        self.getIwContent = function(venueError, index) {
+            var contentString;
+
+            if (venueError == false) {
+                contentString = '<div class="container iw-container">' + // .container .iw-container
+                                    '<div class="row">' +
+                                        '<div class="col-md-12" id="iw-title"></div>' + // #iw-title
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-2" id="iw-rating"></div>' + // #iw-rating
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-7" id="iw-photo"></div>' + // #iw-photo
+                                        '<div class="col-md-5" id="hasPhoto">' + // #iw-hasPhoto
+                                            '<div class="row">' +
+                                                '<div class="col-md-12" id="iw-isOpen"></div>' + // #iw-isOpen
+                                            '</div>' +
+                                            '<div class="row">' +
+                                                '<div class="col-md-12" id="iw-status"></div>' + // #iw-status
+                                            '</div>' +
+                                            '<div class="row">' +
+                                                '<div class="col-md-12" id="iw-hoursOO">' + // #iw-hoursOO
+                                                    '<p>Hours of Operation</p>' +
+                                                '</div>' + // End #iw-hoursOO
+                                            '</div>' +
+                                            '<div class="row">' +
+                                                '<div class="col-md-12" id="iw-hours">' + // #iw-hours
+                                                    '<ul>' +
+                                                        '<li id="mon"><span>Monday</span><div>CLOSED</div></li>' +
+                                                        '<li id="tue"><span>Tuesday</span><div>CLOSED</div></li>' +
+                                                        '<li id="wed"><span>Wednesday</span><div>CLOSED</div></li>' +
+                                                        '<li id="thu"><span>Thursday</span><div>CLOSED</div></li>' +
+                                                        '<li id="fri"><span>Friday</span><div>CLOSED</div></li>' +
+                                                        '<li id="sat"><span>Saturday</span><div>CLOSED</div></li>' +
+                                                        '<li id="sun"><span>Sunday</span><div>CLOSED</div></li>' +
+                                                    '</ul>' +
+                                                '</div>' + // End #iw-hours
+                                            '</div>' +
+                                        '</div>' + // End #iw-hasPhoto
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-12" id="iw-description"></div>' + // #iw-description
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-12" id="iw-tips"></div>' + // #iw-tips
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-12">'+
+                                            '<div class="row">' +
+                                                '<div class="col-md-6" id="iw-contact">' + // #iw-contact
+                                                    '<p>Contact</p>' +
+                                                    '<div class="row">' +
+                                                        '<div class="col-md-4" id="iw-phoneIcon"></div>' + // #iw-phoneIcon
+                                                        '<div class="col-md-8" id="iw-phoneNum"></div>' + // #iw-phoneNum
+                                                    '</div>' +
+                                                    '<div class="row">' +
+                                                        '<div class="col-md-12" id="iw-social"></div>' + // #iw-social
+                                                    '</div>' +
+                                                '</div>' + //End #iw-contact
+                                                '<div class="col-md-6" id="iw-location">' + // #iw-location
+                                                    '<p>Location</p>' +
+                                                    '<div class="row">' +
+                                                        '<div class="col-md-12" id="iw-formattedAddress"></div>' + // #iw-formattedAddress
+                                                    '</div>' +
+                                                '</div>' + // End #iw-location
+                                            '</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>'; // End .container .iw-container
+            }
+            else {
+                var name = self.filteredList()[index].name();
+                contentString = '<div class="container iw-container">' + // .container .iw-container
+                                    '<div class="row">' +
+                                        '<div class="col-md-12" id="iw-title"><p>' + name + '</p></div>' + // #iw-title
+                                    '</div>' +
+                                    '<div class="row">' +
+                                        '<div class="col-md-12">' +
+                                            '<p class="apiError">Foursquare API cannot be reached. Please try again later.</p>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>'; // End .container .iw-container
+            }
+
+            self.infowindow.setContent(contentString);
+        };
 
         // Turns machine readable day to human readable day
         self.getDay = function(dayNumber) {
@@ -579,22 +681,22 @@ var ViewModel = function() {
                 self.appendTips(text, formattedName, length, i);
             }
         };
-    };
 
-    // Appends tips to the screen
-    self.appendTips = function(text, formattedName, length, index) {
-        var formattedTip = '<blockquote>' +
-                               '<p>' + text + '</p>' +
-                               '<footer>' + formattedName + '</footer>' +
-                           '</blockquote>'
-
-        // Makes sure there's no horizontal rule below last entry                   
-        if (length - 1 != index) {
-            $('#iw-tips').append(formattedTip + '<hr>');
-        }
-        else {
-            $('#iw-tips').append(formattedTip);
-        }
+        // Appends tips to the screen
+        self.appendTips = function(text, formattedName, length, index) {
+            var formattedTip = '<blockquote>' +
+                                   '<p>' + text + '</p>' +
+                                   '<footer>' + formattedName + '</footer>' +
+                               '</blockquote>'
+    
+            // Makes sure there's no horizontal rule below last entry                   
+            if (length - 1 != index) {
+                $('#iw-tips').append(formattedTip + '<hr>');
+            }
+            else {
+                $('#iw-tips').append(formattedTip);
+            }
+        };
     };
 
     // When a list item is clicked, getCoffee. toggleBounce otherwise
@@ -621,6 +723,11 @@ var ViewModel = function() {
     		}
     	});
     	self.placeList(mappedPlaceList);
+    })
+    .fail(function() {
+        var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.'
+        $('.apiError').append(CountriesErrorMessage);
+        console.log('test');
     });
 }
  
