@@ -232,6 +232,9 @@ var ViewModel = function() {
                 var rating = venue.rating;
                 var bestPhoto;
                 var venueHours = data.response.responses[1].response.hours;
+                var venueDescription;
+                var tipCount = venue.tips.groups[0].count;
+                var tips;
 
                 // Displays venue name
                 // Adds link if venue has URL
@@ -309,7 +312,29 @@ var ViewModel = function() {
                     $('#iw-hours').append('<p>No information available</p>');
                 }
 
-                // Displays Facebook icon
+                // Displays description
+                // Removes the div in none is available
+                if (venue.hasOwnProperty('description')) {
+                    venueDescription = venue.description;
+                    $('#iw-description').append('<p>About</p>');
+                    $('#iw-description').append('<p>' + venueDescription + '</p>');
+                }
+                else {
+                    $('#iw-description').remove();
+                }
+
+                // Displays tips
+                // Remove the div if none is available
+                if (tipCount == 0) {
+                    $('#iw-tips').remove();
+                }
+                else {
+                    tips = venue.tips.groups[0].items;
+                    self.getTips(tips);
+                    $('#iw-tips').prepend('<p class="hasTips">What others have to say</p>');
+                }
+
+                /*// Displays Facebook icon
                 if (venue.contact.hasOwnProperty('facebook')) {
                     var facebookId = venue.contact.facebook;
                     $('#iw-social').append('<a href="https://www.facebook.com/' + facebookId + '" target="_blank"><i class="fa fa-facebook-official"></i></a>');
@@ -319,7 +344,7 @@ var ViewModel = function() {
                 if (venue.contact.hasOwnProperty('twitter')) {
                     var twitterId = venue.contact.twitter;
                     $('#iw-social').append('<a href="https://www.twitter.com/' + twitterId + '" target="_blank"><i class="fa fa-twitter"></i></a>');
-                }
+                }*/
             }
         });
 
@@ -338,31 +363,31 @@ var ViewModel = function() {
     		self.infowindow.close();
     	}
 
-
+        // These comments will make it easier to idenfity and change content
     	self.infowindow = new google.maps.InfoWindow({
-            content: '<div class="container iw-container">' +
+            content: '<div class="container iw-container">' + // .container .iw-container
                          '<div class="row">' +
-                             '<div class="col-md-12" id="iw-title"></div>' +
+                             '<div class="col-md-12" id="iw-title"></div>' + // #iw-title
                          '</div>' +
                          '<div class="row">' +
-                                 '<div class="col-md-2" id="iw-rating"></div>' +
+                                 '<div class="col-md-2" id="iw-rating"></div>' + // #iw-rating
                          '</div>' +
                          '<div class="row">' +
-                             '<div class="col-md-7" id="iw-photo"></div>' +
-                             '<div class="col-md-5" id="hasPhoto">' +
+                             '<div class="col-md-7" id="iw-photo"></div>' + // #iw-photo
+                             '<div class="col-md-5" id="hasPhoto">' + // #iw-hasPhoto
                                  '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-isOpen"></div>' +
+                                     '<div class="col-md-12" id="iw-isOpen"></div>' + // #iw-isOpen
                                  '</div>' +
                                  '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-status"></div>' +
+                                     '<div class="col-md-12" id="iw-status"></div>' + // #iw-status
                                  '</div>' +
                                  '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-hoursOO">' +
+                                     '<div class="col-md-12" id="iw-hoursOO">' + // #iw-hoursOO
                                          '<p>Hours of Operation</p>' +
-                                     '</div>' +
+                                     '</div>' + // End #iw-hoursOO
                                  '</div>' +
                                  '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-hours">' +
+                                     '<div class="col-md-12" id="iw-hours">' + // #iw-hours
                                          '<ul>' +
                                              '<li id="mon"><span>Monday</span><div>CLOSED</div></li>' +
                                              '<li id="tue"><span>Tuesday</span><div>CLOSED</div></li>' +
@@ -372,14 +397,20 @@ var ViewModel = function() {
                                              '<li id="sat"><span>Saturday</span><div>CLOSED</div></li>' +
                                              '<li id="sun"><span>Sunday</span><div>CLOSED</div></li>' +
                                          '</ul>' +
-                                     '</div>' +
+                                     '</div>' + // End #iw-hours
                                  '</div>' +
                                  '<div class="row">' +
-                                     '<div class="col-md-12" id="iw-social">' +
+                                     '<div class="col-md-12" id="iw-social"></div>' + // #iw-social
                                  '</div>' +
-                             '</div>' +
+                             '</div>' + // End #iw-hasPhoto
                          '</div>' +
-                      '</div>'
+                         '<div class="row">' +
+                             '<div class="col-md-12" id="iw-description"></div>' + // #iw-description
+                         '</div>' +
+                         '<div class="row">' +
+                             '<div class="col-md-12" id="iw-tips"></div>' + // #iw-tips
+                         '</div>' +
+                      '</div>' // End .container .iw-container
     	});
 
         self.infowindow.addListener('domready', function() {
@@ -490,6 +521,80 @@ var ViewModel = function() {
                 $('#sun').replaceWith('<li><span>' + day + '</span><div>' + startTime + ' - ' + endTime + '</div></li>');
             }
         };
+
+        // Fetches tip text and user
+        self.getTips = function(tips) {
+            var text;
+            var firstName;
+            var lastName;
+            var formattedName;
+            var length;
+
+            // Max number of tips to display = 5
+            if (tips.length > 5) {
+                length = 5;
+            }
+            else {
+                length = tips.length;
+            }
+
+            for (var i = 0; i < length; i++) {
+                text = tips[i].text;
+
+                // Determines if the tipper has first and last name 
+                if (tips[i].hasOwnProperty('user')) {
+                    if (tips[i].user.hasOwnProperty('firstName')) {
+                        firstName = tips[i].user.firstName;
+                    }
+                    else {
+                        firstName = '';
+                    }
+
+                    if (tips[i].user.hasOwnProperty('lastName')) {
+                        lastName = tips[i].user.lastName;
+                    }
+                    else {
+                        lastName = '';
+                    }
+                }
+                else {
+                    firstName = '';
+                    lastName = '';
+                }
+
+                // Formats the name of the tipper
+                if (firstName != '' && lastName != '') {
+                    formattedName = firstName + ' ' + lastName;
+                }
+                else if (firstName != '' && lastName == '') {
+                    formattedName = firstName;
+                }
+                else if (firstName == '' && lastName != '') {
+                    formattedName = lastName;
+                }
+                else {
+                    formattedName = 'Unknown';
+                }
+
+                self.appendTips(text, formattedName, length, i);
+            }
+        };
+    };
+
+    // Appends tips to the screen
+    self.appendTips = function(text, formattedName, length, index) {
+        var formattedTip = '<blockquote>' +
+                               '<p>' + text + '</p>' +
+                               '<footer>' + formattedName + '</footer>' +
+                           '</blockquote>'
+
+        // Makes sure there's no horizontal rule below last entry                   
+        if (length - 1 != index) {
+            $('#iw-tips').append(formattedTip + '<hr>');
+        }
+        else {
+            $('#iw-tips').append(formattedTip);
+        }
     };
 
     // When a list item is clicked, getCoffee. toggleBounce otherwise

@@ -3,6 +3,7 @@
 	width: 100% !important;
 }
 
+/* TITLE */
 #iw-title {
 	font-size: 30px;
 	font-weight: 400;
@@ -20,6 +21,7 @@
 	color: #795548;
 }
 
+/* RATING */
 #iw-rating {
 	font-size: 20px;
 	font-weight: 400;
@@ -30,51 +32,92 @@
 	width: 100%;
 }
 
+/* PHOTO */
 #iw-photo {
 	padding: 0px;
 }
 
+/* IS OPEN */
 #iw-isOpen {
 	text-align: center;
 	font-size: 20px;
 	font-weight: bolder;
+}
+
+/* STATUS */
+#iw-status p {
+	text-align: center;
+	font-size: 15px;
 	margin-bottom: 0px;
 }
 
-#iw-status {
-	text-align: center;
-	font-size: 15px;
-	margin-bottom: 15px;
-}
-
+/* HOURS OF OPERATION */
 #iw-hoursOO {
 	font-size: 20px;
 	font-weight: bolder;
 	text-align: center;
 	text-decoration: underline;
+	margin-top: 10px;
 }
 
 #iw-hours p {
 	text-align: center;
+	font-size: 20px;
 }
 
-#iw-social a {
-	padding: 0px 5px 0px 5px;
-}
-
-ul {
+#iw-hours ul {
 	list-style-type: none;
 	padding-left: 0px;
+}
+
+#iw-hours ul li {
+	font-size: 15px;
+	margin-bottom: 2px;
 }
 
 li div {
 	float: right;
 }
 
-.iw-container {
-	background-color: white;
-	border: 2px solid orange;
-	border-radius: 5px;
+/* DESCRIPTION */
+#iw-description p:first-child {
+	font-size: 20px;
+	font-weight: bolder;
+	text-decoration: underline;
+	text-align: center;
+	margin: 10px 0px 5px 0px;
+}
+
+#iw-description p:last-child {
+	font-size: 15px;
+	padding: 0px 10px;
+	text-align: center;
+	margin-bottom: 0px;
+}
+
+/* TIPS */
+.hasTips {
+	font-size: 20px;
+	font-weight: bolder;
+	text-align: center;
+	text-decoration: underline;
+	margin: 10px 0px 5px 0px;
+}
+
+blockquote {
+	font-size: 15px;
+	text-align: center;
+	margin-bottom: 0px;
+	border: none;
+}
+
+hr {
+	margin: 10px 0px;
+}
+
+/* SOCIAL */
+#iw-social a {
+	padding: 0px 5px 0px 5px;
 }
 
 .fa-facebook-official {
@@ -85,4 +128,12 @@ li div {
 .fa-twitter {
 	color: #55acee;
 	font-size: 50px;
+}
+
+.iw-container {
+	background-color: white;
+	border: 2px solid orange;
+	border-radius: 5px;
+	max-height: 575px;
+	overflow: auto;
 }

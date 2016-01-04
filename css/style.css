@@ -2,6 +2,11 @@
 	height: 100%;
 }
 
+.fsattr {
+	height: 25px;
+	margin-top: 10px;
+}
+
 .container-fluid {
 	height: 100%;
 	padding: 0;
@@ -26,6 +31,11 @@ button.list-group-item {
 
 .navbar-brand {
 	margin-left: 50px;
+}
+
+.navmenu-brand {
+	margin-bottom: 0px;
+	padding-bottom: 0px;
 }
 
 #map img {
