@@ -112,6 +112,11 @@ var ViewModel = function() {
     	self.coffeeShopList([]);
     	self.getMarkers();
 
+        // Closes info window is it's opened
+        if (self.infowindow != null) {
+            self.infowindow.close();
+        }
+
         // Removes error message
         $('.apiError').html('');
     };
@@ -521,6 +526,9 @@ var ViewModel = function() {
                                         '</div>' +
                                     '</div>' +
                                 '</div>'; // End .container .iw-container
+                                
+                // Reopens window to make all content visible on screen
+                self.infowindow.open(map, self.markerList()[index]);
             }
             else {
                 var name = self.filteredList()[index].name();
@@ -534,8 +542,10 @@ var ViewModel = function() {
                                         '</div>' +
                                     '</div>' +
                                 '</div>'; // End .container .iw-container
+                self.infowindow.open(map, self.markerList()[index]);
             }
 
+            // Reopens window to make all content visible on screen
             self.infowindow.setContent(contentString);
         };
 
