@@ -24,15 +24,15 @@ else {
 
 // The capital city
 var Place = function(data) {
-	this.name = ko.observable(data.capital + ', ' + data.name);
+    this.name = ko.observable(data.capital + ', ' + data.name);
 };
 
 // The coffee shops
 var CoffeeShops = function(data) {
-	this.name = ko.observable(data.venue.name);
+    this.name = ko.observable(data.venue.name);
     this.venueId = ko.observable(data.venue.id);
-	this.latitude = ko.observable(data.venue.location.lat);
-	this.longitude = ko.observable(data.venue.location.lng);
+    this.latitude = ko.observable(data.venue.location.lat);
+    this.longitude = ko.observable(data.venue.location.lng);
 };
 
 var ViewModel = function() {
@@ -60,57 +60,57 @@ var ViewModel = function() {
             self.filteredList([]);
             self.foursquareError(false);
         }
-    	// If a city has been clicked and nothing was searched for, populate the list with all coffee shops from this capital
-    	else if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
-    		self.filteredList(self.coffeeShopList());
+        // If a city has been clicked and nothing was searched for, populate the list with all coffee shops from this capital
+        else if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
+            self.filteredList(self.coffeeShopList());
             self.getMarkers();
-    	}
-    	// If a city has not been clicked and nothing is searched for, populate the list with cities
-    	else if (self.coffeeShopList().length == 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
-    		self.filteredList(self.placeList());
+        }
+        // If a city has not been clicked and nothing is searched for, populate the list with cities
+        else if (self.coffeeShopList().length == 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
+            self.filteredList(self.placeList());
 
-    	}
-    	// Clears the filteredList array and populates it with the names matching the search string
-    	// Will filter cities or coffee shops depending on previous condition
-    	else {
-    		self.filteredList([]);
+        }
+        // Clears the filteredList array and populates it with the names matching the search string
+        // Will filter cities or coffee shops depending on previous condition
+        else {
+            self.filteredList([]);
 
-    		// If coffeeShopList is bigger than 0, filter coffeeShopList
-    		// Filter placeList otherwise
-    		if (self.coffeeShopList().length != 0) {
-    			self.filterCurrentList(self.coffeeShopList());
+            // If coffeeShopList is bigger than 0, filter coffeeShopList
+            // Filter placeList otherwise
+            if (self.coffeeShopList().length != 0) {
+                self.filterCurrentList(self.coffeeShopList());
                 self.getMarkers();
-    		}
-    		else {
-    			self.filterCurrentList(self.placeList());
-    		}
-    	}
+            }
+            else {
+                self.filterCurrentList(self.placeList());
+            }
+        }
         // This will make it easier to search for venue ids later
         self.idList(self.filteredList());
     }, self);
 
-	// Function to filter the current list
-	// Avoids repetition in self.filter
-	self.filterCurrentList = function(currentList) {
-		for (var i = 0; i < currentList.length; i++) {
-			// Place name and search string converted to lowercase for easier searching
-			var name = currentList[i].name().toLowerCase();
+    // Function to filter the current list
+    // Avoids repetition in self.filter
+    self.filterCurrentList = function(currentList) {
+        for (var i = 0; i < currentList.length; i++) {
+            // Place name and search string converted to lowercase for easier searching
+            var name = currentList[i].name().toLowerCase();
 
-			// Populates the filteredList array with place names matching search term
-			if (name.includes(self.searchValue().toLowerCase())) {
-				self.filteredList.push(currentList[i]);
-			}
-		}
-	};
+            // Populates the filteredList array with place names matching search term
+            if (name.includes(self.searchValue().toLowerCase())) {
+                self.filteredList.push(currentList[i]);
+            }
+        }
+    };
 
     /* == Back == */
     self.back = function() {
-    	// Resets search value
-    	self.searchValue('');
+        // Resets search value
+        self.searchValue('');
 
-    	self.filteredList(self.placeList());
-    	self.coffeeShopList([]);
-    	self.getMarkers();
+        self.filteredList(self.placeList());
+        self.coffeeShopList([]);
+        self.getMarkers();
 
         // Closes info window is it's opened
         if (self.infowindow != null) {
@@ -123,34 +123,34 @@ var ViewModel = function() {
 
     /* == Get Coffee == */
     self.getCoffee = function(index) {
-    	// Only executes if the coffeeShopList is empty
-    	// This prevents from making a new request with coffee shop as the address
-    	if (self.coffeeShopList().length == 0) {
-    		var cityAddress = self.filteredList()[index].name();
+        // Only executes if the coffeeShopList is empty
+        // This prevents from making a new request with coffee shop as the address
+        if (self.coffeeShopList().length == 0) {
+            var cityAddress = self.filteredList()[index].name();
 
-	    	// Foursquare API URL
-	    	var foursquareUrl = 'https://api.foursquare.com/v2/venues/explore?near=' + cityAddress + '&section=coffee&limit=25&client_id='
-	    						+ clientId + '&client_secret=' + clientSecret + '&v=' + version;
+            // Foursquare API URL
+            var foursquareUrl = 'https://api.foursquare.com/v2/venues/explore?near=' + cityAddress + '&section=coffee&limit=25&client_id='
+                                + clientId + '&client_secret=' + clientSecret + '&v=' + version;
 
 
-	    	// Gets data from the Foursquare API
-	    	$.getJSON(foursquareUrl, function(data) {
+            // Gets data from the Foursquare API
+            $.getJSON(foursquareUrl, function(data) {
 
-	    		// Adds all coffee shops to an array
-	    		var mappedCoffeeShopList = $.map(data.response.groups[0].items, function(coffee) {
-	    			return new CoffeeShops(coffee);
-	    		});
-	    		self.coffeeShopList(mappedCoffeeShopList);
-	    		self.filteredList(self.coffeeShopList());
-	    		self.searchValue('');
-	    	})
+                // Adds all coffee shops to an array
+                var mappedCoffeeShopList = $.map(data.response.groups[0].items, function(coffee) {
+                    return new CoffeeShops(coffee);
+                });
+                self.coffeeShopList(mappedCoffeeShopList);
+                self.filteredList(self.coffeeShopList());
+                self.searchValue('');
+            })
             .fail(function() {
                 self.foursquareError(true);
                 var foursquareErrorMsg = 'Foursquare API cannot be reached. Please try again later.';
 
                 $('.apiError').append(foursquareErrorMsg);
             });
-	    }
+        }
     };
      
     /* == Get Markers == */
@@ -205,37 +205,37 @@ var ViewModel = function() {
     };
 
     self.setBounds = function() {
-    	self.latLngList([]);
-    	self.bounds = new google.maps.LatLngBounds();
+        self.latLngList([]);
+        self.bounds = new google.maps.LatLngBounds();
 
-    	// Puts the position of all markers into a latLngList array
-    	for (var i = 0; i < self.markerList().length; i ++) {
-    		var markerPosition = {lat: self.markerList()[i].position.lat(), lng: self.markerList()[i].position.lng()};
-    		self.latLngList().push(new google.maps.LatLng(markerPosition));
-    	}
+        // Puts the position of all markers into a latLngList array
+        for (var i = 0; i < self.markerList().length; i ++) {
+            var markerPosition = {lat: self.markerList()[i].position.lat(), lng: self.markerList()[i].position.lng()};
+            self.latLngList().push(new google.maps.LatLng(markerPosition));
+        }
 
-    	// Uses the marker position in LatLngList to extend the bounds of the map
-    	for (var i = 0; i < self.latLngList().length; i++) {
-    		self.bounds.extend(self.latLngList()[i]);
-    	}
-    	map.fitBounds(self.bounds);
+        // Uses the marker position in LatLngList to extend the bounds of the map
+        for (var i = 0; i < self.latLngList().length; i++) {
+            self.bounds.extend(self.latLngList()[i]);
+        }
+        map.fitBounds(self.bounds);
     };
 
     /* == Bounce == */
     self.toggleBounce = function(index) {
-    	// Iterates through all markers on the map
-    	for (var i = 0; i < self.markerList().length; i++) {
-    		var currentMarker = self.markerList()[i];
+        // Iterates through all markers on the map
+        for (var i = 0; i < self.markerList().length; i++) {
+            var currentMarker = self.markerList()[i];
 
-    		// Sets animation of clicked marker to bounce
-    		// Else sets the marker animation to null (also does this if clicked marker is already bouncing)
-    		if (i == index && currentMarker.getAnimation() == null) {
-    			currentMarker.setAnimation(google.maps.Animation.BOUNCE);
-    		}
-    		else {
-    			currentMarker.setAnimation(null);
-    		}
-    	}
+            // Sets animation of clicked marker to bounce
+            // Else sets the marker animation to null (also does this if clicked marker is already bouncing)
+            if (i == index && currentMarker.getAnimation() == null) {
+                currentMarker.setAnimation(google.maps.Animation.BOUNCE);
+            }
+            else {
+                currentMarker.setAnimation(null);
+            }
+        }
     };
 
     /* == Info Window == */
@@ -414,15 +414,16 @@ var ViewModel = function() {
             self.markerList()[index].setAnimation(null);
         });
 
-    	self.markerAnimation = self.markerList()[index].getAnimation();
+        self.markerAnimation = self.markerList()[index].getAnimation();
 
-    	// If a info window is opened when another wants to open, close it
-    	if (self.infowindow != null) {
-    		self.infowindow.close();
-    	}
+        // If a info window is opened when another wants to open, close it
+        if (self.infowindow != null) {
+            self.infowindow.close();
+        }
 
         // These comments will make it easier to idenfity and change content
-    	self.infowindow = new google.maps.InfoWindow({
+        self.infowindow = new google.maps.InfoWindow({
+            pixelOffset: new google.maps.Size(0, -50),
             content: '<div class="container iw-container">' + // .container .iw-container
                          '<div class="row">' +
                              '<div class="col-md-12 loading">'+
@@ -430,7 +431,7 @@ var ViewModel = function() {
                              '</div>' +
                          '</div>' +
                       '</div>' // End .container .iw-container
-    	});
+        });
 
         self.infowindow.addListener('domready', function() {
             $('.gm-style-iw').next('div').hide();
@@ -444,17 +445,17 @@ var ViewModel = function() {
             // Remove infow window white background
             iwBackground.children(':nth-child(4)').css({'display' : 'none'});
             // Put a border around the arrow to match the info window style
-			iwBackground.children(':nth-child(3)').find('div').children().css({'border': '2px solid orange'});
+            iwBackground.children(':nth-child(3)').find('div').children().css({'border': '2px solid orange'});
         });
 
         
-    	// Opens info window on top of corresponding marker
-    	self.infowindow.open(map, self.markerList()[index]);
+        // Opens info window on top of corresponding marker
+        self.infowindow.open(map, self.markerList()[index]);
 
-    	// If marker animation stops (clicks on marker or list), close info window
-    	if (self.markerAnimation == null) {
-    		self.infowindow.close();
-    	}
+        // If marker animation stops (clicks on marker or list), close info window
+        if (self.markerAnimation == null) {
+            self.infowindow.close();
+        }
 
         // Sets content to display in info window
         self.getIwContent = function(venueError, index) {
@@ -711,13 +712,13 @@ var ViewModel = function() {
 
     // When a list item is clicked, getCoffee. toggleBounce otherwise
     self.onListClick = function(index) {
-    	if (self.markerList() == 0) {
-    		self.getCoffee(index);
-    	}
-    	else {
-    		self.toggleBounce(index);
-    		self.toggleWindow(index);
-    	}
+        if (self.markerList() == 0) {
+            self.getCoffee(index);
+        }
+        else {
+            self.toggleBounce(index);
+            self.toggleWindow(index);
+        }
     };
 
     // REST Countries API URL
@@ -725,14 +726,14 @@ var ViewModel = function() {
 
     // Gets data from the REST Countries API
     $.getJSON(countryInfoUrl, function(data) {
-    	// Adds all countries to a list of places
-    	var mappedPlaceList = $.map(data, function(place) {
-    		// Makes sure only countries of Europe gets added
-    		if (place.region == 'Europe') {
-    			return new Place(place);
-    		}
-    	});
-    	self.placeList(mappedPlaceList);
+        // Adds all countries to a list of places
+        var mappedPlaceList = $.map(data, function(place) {
+            // Makes sure only countries of Europe gets added
+            if (place.region == 'Europe') {
+                return new Place(place);
+            }
+        });
+        self.placeList(mappedPlaceList);
     })
     .fail(function() {
         var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.'
