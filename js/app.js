@@ -18,9 +18,8 @@ else {
     };
 
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
 }
-
-
 
 // The capital city
 var Place = function(data) {
@@ -29,10 +28,18 @@ var Place = function(data) {
 
 // The coffee shops
 var CoffeeShops = function(data) {
-    this.name = ko.observable(data.venue.name);
-    this.venueId = ko.observable(data.venue.id);
-    this.latitude = ko.observable(data.venue.location.lat);
-    this.longitude = ko.observable(data.venue.location.lng);
+    if (data.hasOwnProperty('venue')) {
+        this.name = ko.observable(data.venue.name);
+        this.venueId = ko.observable(data.venue.id);
+        this.latitude = ko.observable(data.venue.location.lat);
+        this.longitude = ko.observable(data.venue.location.lng);
+    }
+    else {
+        this.name = ko.observable(data.name);
+        this.venueId = ko.observable(data.id);
+        this.latitude = ko.observable(data.location.lat);
+        this.longitude = ko.observable(data.location.lng);
+    }
 };
 
 var ViewModel = function() {
@@ -44,24 +51,155 @@ var ViewModel = function() {
     self.latLngList = ko.observableArray([]);
     self.idList = ko.observableArray([]);
     self.foursquareError = ko.observable();
+    self.currentVenue = ko.observable();
+    self.starClick = ko.observable(false);
+    self.favoritesList = ko.observableArray([]);
+    self.faveBtnClick = ko.observable(false);
+    self.noFavorites = ko.observable(false);
+    self.favoritesLength = ko.observable();
+    self.faveBtnText = ko.observable();
 
     // Needed for Foursquare API
     var clientId = '5PLNSFDCFOXXWLZOHDRG33R3PLP5OULVV0NQDPLZMOCON3OL';
     var clientSecret = 'DFRQK4JG21B1ECQ104LLNMH1O5TUQ4OZC2C24AAKZCTEPJAG';
     var version = '20151221';
 
+    // Populates favoritesList array with favorites, if any is available
+    if (localStorage.getItem('favoriteKey') !== null) {
+        self.favoritesList(JSON.parse(localStorage.getItem('favoriteKey')));
+    }
+
+    self.favorites = ko.computed(function() {
+        // Detects if the star has been clicked
+        if (self.starClick()) {
+            $('#favorite').toggleClass('starred');
+            self.updateFavorites();
+            self.starClick(false);
+        }
+
+        // Sets the text of the favorite
+        self.favoritesLength(self.favoritesList().length);
+        self.faveBtnText('My Favorites' + ' (' + self.favoritesLength() + ')');
+        $('.faveBtn').html(self.faveBtnText());
+    }, self);
+
+    // Checks the list of favorites to apply appropriate CSS
+    self.checkFavorites = function() {
+        var currentVenueId = self.currentVenue().id;
+        var isFavorite = false;
+
+        // Checks the ID of the clicked venue VS IDs of favorite venues
+        for (var i = 0; i < self.favoritesList().length; i++) {
+            var favoriteVenueId = self.favoritesList()[i].id;
+
+            if (currentVenueId === favoriteVenueId) {
+                isFavorite = true;
+                break;
+            }
+        }
+
+        if (isFavorite) {
+            $('#favorite').toggleClass('starred');
+        }
+    };
+
+    // Updates favorites list when a star is clicked
+    self.updateFavorites = function() {
+        // Checks if venue is already a favorite
+        var isStarred = $('#favorite').hasClass('starred');
+
+        // If isStarred is true(was previously not in list of favorites), add it to the list
+        // Remove it from favorites otherwise
+        if (isStarred) {
+            self.favoritesList().push(self.currentVenue());
+            localStorage.setItem('favoriteKey', JSON.stringify(self.favoritesList()));
+            self.markerIcon();
+        }
+        else {
+            var currentVenueId = self.currentVenue().id;
+
+            for (var i = 0; i < self.favoritesList().length; i++) {
+                var favoriteVenueId = self.favoritesList()[i].id;
+
+                if (currentVenueId === favoriteVenueId) {
+                    var index = i;
+                    break;
+                }
+            }
+
+            self.favoritesList().splice(index, 1);
+            localStorage.setItem('favoriteKey', JSON.stringify(self.favoritesList()));
+            self.markerIcon();
+        }
+    };
+
+    // Applies proper marker for favorites
+    self.markerIcon = function() {
+        // Only triggers is favorites exists
+        // Else set all markers to regular icon
+        if (self.favoritesList().length != 0) {
+            // Iterates through all markers in the list
+            for (var i = 0; i < self.markerList().length; i++) {
+                var markerId = self.markerList()[i].markerId;
+                // Iterates through the favorite list and compare current marker with each
+                for (var j = 0; j < self.favoritesList().length; j++) {
+                    var venueNameId = self.favoritesList()[j].name + ', ' + self.favoritesList()[j].id;
+    
+                    // If current marker is in the list, set its icon to fave Icon
+                    // Else set it to regular icon
+                    if (markerId === venueNameId) {
+                        self.markerList()[i].setIcon('images/faveCoffee.png');
+                        break;
+                    }
+                    else {
+                        self.markerList()[i].setIcon('images/coffee.png');
+                    }
+                }
+            }
+        }
+        else {
+            for (var i = 0; i < self.markerList().length; i++) {
+                self.markerList()[i].setIcon('images/coffee.png');
+            }
+        }
+    };
+
+    // Triggers when favorite button is pressed
+    self.listFavorites = function() {
+        // If favorites exists, get coffee
+        if (self.favoritesList().length > 0) {
+            self.faveBtnClick(true);
+            self.getCoffee();
+        }
+        else {
+            self.noFavorites(true);
+        }
+    }
 
     /* == Filter == */
     self.searchValue = ko.observable();
     self.filteredList = ko.observableArray([]);
 
     self.filter = ko.computed(function() {
-        if (self.foursquareError() == true) {
+        // Displays a how to message to the user if no favorites are in the list
+        if (self.noFavorites()) {
+            var faveMsg = 'To add favorites, click on coffee shop name in the list or marker then click on the star next to the coffee shop name. Please click on the above back button to return to the capitals list.';
+            self.filteredList([]);
+            self.coffeeShopList([]);
+            self.searchValue('');
+            self.getMarkers();
+            $('.favoritesMsg').html('');
+            $('.apiError').html('');
+            $('.favoritesMsg').append(faveMsg);
+            self.noFavorites(false);
+        }
+        // Displays error if API cannot be reached
+        else if (self.foursquareError() == true) {
             self.filteredList([]);
             self.foursquareError(false);
         }
-        // If a city has been clicked and nothing was searched for, populate the list with all coffee shops from this capital
-        else if (self.coffeeShopList().length != 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
+        // If a city has been clicked(or populated favorite list) and nothing was searched for, populate the list with all coffee shops from this capital
+        else if (self.coffeeShopList().length != 0  && self.noFavorites() == false && (self.searchValue() == '' || self.searchValue() == undefined)) {
             self.filteredList(self.coffeeShopList());
             self.getMarkers();
         }
@@ -85,7 +223,7 @@ var ViewModel = function() {
                 self.filterCurrentList(self.placeList());
             }
         }
-        // This will make it easier to search for venue ids later
+        // This will make it easier to search for venue ids later (For other Ajax request)
         self.idList(self.filteredList());
     }, self);
 
@@ -119,13 +257,24 @@ var ViewModel = function() {
 
         // Removes error message
         $('.apiError').html('');
+        $('.favoritesMsg').html('');
     };
 
     /* == Get Coffee == */
     self.getCoffee = function(index) {
-        // Only executes if the coffeeShopList is empty
-        // This prevents from making a new request with coffee shop as the address
-        if (self.coffeeShopList().length == 0) {
+        // If favorites are clicked on and exist, populate arrays with favorites data
+        // Else populate arrays with new capital coffee data
+        if (self.faveBtnClick()) {
+            self.faveBtnClick(false);
+
+            var mappedCoffeeShopList = $.map(self.favoritesList(), function(coffee) {
+                return new CoffeeShops(coffee);
+            });
+            self.coffeeShopList(mappedCoffeeShopList);
+            self.filteredList(self.coffeeShopList());
+            self.searchValue('');
+        }
+        else if (self.coffeeShopList().length == 0) {
             var cityAddress = self.filteredList()[index].name();
 
             // Foursquare API URL
@@ -161,21 +310,22 @@ var ViewModel = function() {
         }
         self.markerList([]);
 
-
         if (self.coffeeShopList().length != 0) {
             // Populates the marker list with corresponding city/filter
             for (var i = 0; i < self.filteredList().length; i++) {
                 var coffeeShopName = self.filteredList()[i].name();
+                var coffeeShopId = self.filteredList()[i].venueId();
                 var coffeeShopPosition = {lat: self.filteredList()[i].latitude(), lng: self.filteredList()[i].longitude()};
 
                 self.markerList().push(new google.maps.Marker({
                     title: coffeeShopName,
                     position: coffeeShopPosition,
-                    animation: null
+                    animation: null,
+                    markerId: coffeeShopName + ', ' + coffeeShopId
                 }));
             }
         }
-
+        self.markerIcon();
         self.placeMarkers();
     };
 
@@ -240,10 +390,10 @@ var ViewModel = function() {
 
     /* == Info Window == */
     self.toggleWindow = function(index) {
-        var venueId = self.idList()[index].venueId();
         var venueError;
 
         // URL to get complete venue details
+        var venueId = self.idList()[index].venueId();
         var getVenue = '/venues/' + venueId;
         var getHours = '/venues/' + venueId + '/hours';
         var venueIdUrl = 'https://api.foursquare.com/v2/multi?requests=' + getVenue + ',' + getHours +
@@ -254,30 +404,32 @@ var ViewModel = function() {
             url: venueIdUrl,
             dataType: 'json',
             success: function(data) {
+                self.currentVenue(data.response.responses[0].response.venue);
+
                 venueError = false;
-                self.getIwContent(venueError);
+
+                self.getIwContent(venueError, index);
 
                 // Complete venue details
-                var venue = data.response.responses[0].response.venue;
-                var name = venue.name;
-                var rating = venue.rating;
+                var name = self.currentVenue().name;
+                var rating = self.currentVenue().rating;
                 var bestPhoto;
                 var venueHours = data.response.responses[1].response.hours;
                 var venueDescription;
-                var tipCount = venue.tips.groups[0].count;
+                var tipCount = self.currentVenue().tips.groups[0].count;
                 var tips;
-                var canonicalUrl = venue.canonicalUrl;
+                var canonicalUrl = self.currentVenue().canonicalUrl;
                 var phone;
                 var formattedAddress;
 
                 // Displays venue name
                 // Adds link if venue has URL
-                if (venue.hasOwnProperty('url')) {
-                    var venueUrl = venue.url;
-                    $('#iw-title').append('<a href="' + venueUrl + '" target="_blank">' + name + '</a>');
+                if (self.currentVenue().hasOwnProperty('url')) {
+                    var venueUrl = self.currentVenue().url;
+                    $('#iw-title').prepend('<a href="' + venueUrl + '" target="_blank">' + name + '</a>');
                 }
                 else {
-                    $('#iw-title').append(name);
+                    $('#iw-title').prepend(name);
                 }
 
                 // Displays venue rating
@@ -289,8 +441,8 @@ var ViewModel = function() {
                 }
 
                 // Displays venue best photo
-                if (venue.hasOwnProperty('bestPhoto')) {
-                    bestPhoto = venue.bestPhoto.prefix + 'original' + venue.bestPhoto.suffix;
+                if (self.currentVenue().hasOwnProperty('bestPhoto')) {
+                    bestPhoto = self.currentVenue().bestPhoto.prefix + 'original' + self.currentVenue().bestPhoto.suffix;
                 }
 
                 if (bestPhoto != undefined) {
@@ -304,16 +456,16 @@ var ViewModel = function() {
                 }
 
                 // Displays isOpen and status if available. Removes the div otherwise
-                if (venue.hasOwnProperty('hours')) {
-                    if (venue.hours.isOpen == true) {
+                if (self.currentVenue().hasOwnProperty('hours')) {
+                    if (self.currentVenue().hours.isOpen == true) {
                         $('#iw-isOpen').prepend('<p>Open Now</p>').css({'color': 'green'});
                     }
                     else {
                         $('#iw-isOpen').prepend('<p>Closed Now</p>').css({'color': 'red'});
                     }
 
-                    if (venue.hours.hasOwnProperty('status')) {
-                        $('#iw-status').append('<p>' + venue.hours.status + '</p>');
+                    if (self.currentVenue().hours.hasOwnProperty('status')) {
+                        $('#iw-status').append('<p>' + self.currentVenue().hours.status + '</p>');
                     }
                     else {
                         $('#iw-status').remove();
@@ -348,8 +500,8 @@ var ViewModel = function() {
 
                 // Displays description
                 // Removes the div in none is available
-                if (venue.hasOwnProperty('description')) {
-                    venueDescription = venue.description;
+                if (self.currentVenue().hasOwnProperty('description')) {
+                    venueDescription = self.currentVenue().description;
                     $('#iw-description').append('<p>About</p>');
                     $('#iw-description').append('<p>' + venueDescription + '</p>');
                 }
@@ -363,15 +515,15 @@ var ViewModel = function() {
                     $('#iw-tips').remove();
                 }
                 else {
-                    tips = venue.tips.groups[0].items;
+                    tips = self.currentVenue().tips.groups[0].items;
                     self.getTips(tips);
                     $('#iw-tips').prepend('<p class="hasTips">What others have to say</p>');
                 }
 
                 // Displays phone number
                 // Remove the divs otherwise
-                if (venue.contact.hasOwnProperty('formattedPhone')) {
-                    phone = venue.contact.formattedPhone;
+                if (self.currentVenue().contact.hasOwnProperty('formattedPhone')) {
+                    phone = self.currentVenue().contact.formattedPhone;
                     $('#iw-phoneIcon').append('<i class="fa fa-phone-square"></i>');
                     $('#iw-phoneNum').append('<p>' + phone + '</p>');
                 }
@@ -384,35 +536,39 @@ var ViewModel = function() {
                 $('#iw-social').append('<a href="' + canonicalUrl + '" target="_blank"><i class="fa fa-foursquare"></i></a>');
 
                 // Displays Facebook icon
-                if (venue.contact.hasOwnProperty('facebook')) {
-                    var facebookId = venue.contact.facebook;
+                if (self.currentVenue().contact.hasOwnProperty('facebook')) {
+                    var facebookId = self.currentVenue().contact.facebook;
                     $('#iw-social').append('<a href="https://www.facebook.com/' + facebookId + '" target="_blank"><i class="fa fa-facebook-official"></i></a>');
                 }
 
                 // Displays Twitter icon
-                if (venue.contact.hasOwnProperty('twitter')) {
-                    var twitterId = venue.contact.twitter;
+                if (self.currentVenue().contact.hasOwnProperty('twitter')) {
+                    var twitterId = self.currentVenue().contact.twitter;
                     $('#iw-social').append('<a href="https://www.twitter.com/' + twitterId + '" target="_blank"><i class="fa fa-twitter"></i></a>');
                 }
 
-                if (venue.location.hasOwnProperty('formattedAddress')) {
-                    for (var i = 0; i < venue.location.formattedAddress.length; i++) {
-                        formattedAddress = venue.location.formattedAddress[i];
+                if (self.currentVenue().location.hasOwnProperty('formattedAddress')) {
+                    for (var i = 0; i < self.currentVenue().location.formattedAddress.length; i++) {
+                        formattedAddress = self.currentVenue().location.formattedAddress[i];
                         $('#iw-formattedAddress').append('<p>' + formattedAddress + '</p>');
                     }
                 }
+
+                self.checkFavorites();
             }
         })
         .fail(function() {
             venueError = true;
-            self.getIwContent(venueError, index);
+            self.getIwContent(venueError, index, venue);
         });
 
         // Clicking outside the map closes the info window and stops marker animation
-        map.addListener('click', function() {
-            self.infowindow.close();
-            self.markerList()[index].setAnimation(null);
-        });
+        if (self.coffeeShopList().length != 0) {
+            map.addListener('click', function() {
+                self.infowindow.close();
+                self.markerList()[index].setAnimation(null);
+            });
+        }
 
         self.markerAnimation = self.markerList()[index].getAnimation();
 
@@ -423,7 +579,7 @@ var ViewModel = function() {
 
         // These comments will make it easier to idenfity and change content
         self.infowindow = new google.maps.InfoWindow({
-            pixelOffset: new google.maps.Size(0, -50),
+            pixelOffset: new google.maps.Size(0, -10),
             content: '<div class="container iw-container">' + // .container .iw-container
                          '<div class="row">' +
                              '<div class="col-md-12 loading">'+
@@ -450,21 +606,18 @@ var ViewModel = function() {
 
         
         // Opens info window on top of corresponding marker
-        self.infowindow.open(map, self.markerList()[index]);
-
-        // If marker animation stops (clicks on marker or list), close info window
-        if (self.markerAnimation == null) {
-            self.infowindow.close();
+        if (self.infowindow != null) {
+            self.infowindow.open(map, self.markerList()[index]);
         }
 
         // Sets content to display in info window
-        self.getIwContent = function(venueError, index) {
+        self.getIwContent = function(venueError, index, venue) {
             var contentString;
 
             if (venueError == false) {
                 contentString = '<div class="container iw-container">' + // .container .iw-container
                                     '<div class="row">' +
-                                        '<div class="col-md-12" id="iw-title"></div>' + // #iw-title
+                                        '<div class="col-md-12" id="iw-title"><i id="favorite" class="fa fa-star"></i></div>' + // #iw-title
                                     '</div>' +
                                     '<div class="row">' +
                                         '<div class="col-md-2" id="iw-rating"></div>' + // #iw-rating
@@ -530,6 +683,11 @@ var ViewModel = function() {
                                 
                 // Reopens window to make all content visible on screen
                 self.infowindow.open(map, self.markerList()[index]);
+
+                // If marker animation stops (clicks on marker or list), close info window
+                if (self.markerAnimation == null) {
+                    self.infowindow.close();
+                }
             }
             else {
                 var name = self.filteredList()[index].name();
@@ -548,7 +706,13 @@ var ViewModel = function() {
 
             // Reopens window to make all content visible on screen
             self.infowindow.setContent(contentString);
+
+            // Makes the star clickable
+            $('#favorite').click(function() {
+                self.starClick(true);
+            });
         };
+
 
         // Turns machine readable day to human readable day
         self.getDay = function(dayNumber) {
@@ -738,7 +902,6 @@ var ViewModel = function() {
     .fail(function() {
         var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.'
         $('.apiError').append(CountriesErrorMessage);
-        console.log('test');
     });
 }
  

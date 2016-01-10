@@ -21,6 +21,19 @@
 	color: #795548;
 }
 
+.fa-star {
+	margin-left: 10px;
+}
+
+.fa-star:hover {
+	color: yellow;
+	cursor: pointer;
+}
+
+.starred {
+	color: yellow;
+}
+
 /* RATING */
 #iw-rating {
 	font-size: 20px;
