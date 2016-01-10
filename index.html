@@ -23,9 +23,12 @@
 					<img class="img-responsive center-block fsattr" src="images/foursquare.png" alt="Powered by Foursquare">
 				</a>
 				<input type="search" class="form-control text-center" placeholder="Search" data-bind="textInput: searchValue">
+				<button type="button" class="list-group-item hidden-md hidden-lg faveBtn" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.listFavorites"></button>
+				<button type="button" class="list-group-item hidden-xs hidden-sm faveBtn" data-bind="click: $root.listFavorites"></button>
 				<button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.back">BACK</button>
 				<button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="click: $root.back">BACK</button>
 				<p class="apiError"></p>
+				<p class="favoritesMsg"></p>
 				<!-- Knockout binding to loop through filteredList -->
 				<div class="list-group" data-bind="foreach: filteredList">
 					<!-- Knockout binding sets # of buttons = # 'filteredList' and sets the text of 'filteredList' 'name' -->
@@ -55,6 +58,34 @@
 				<div class="row mapError">
 					<div class="col-md-12">
 						<i class="fa fa-spinner fa-spin"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Legend for map icons -->
+		<div id="legend">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<p class="legendTitle">Legend</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<img src="images/coffee.png" alt="coffee">
+						<p>Coffee Shop</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<img src="images/faveCoffee.png" alt="favorites">
+						<p>Favorite</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<a href="https://mapicons.mapsmarker.com" target="_blank"><img class="logo" src="images/mapiconslogo.png" alt="Map Icons Logo"></a>
 					</div>
 				</div>
 			</div>

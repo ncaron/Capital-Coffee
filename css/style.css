@@ -42,6 +42,36 @@ button.list-group-item {
 	max-width: none;
 }
 
+.faveBtn {
+	margin-bottom: 5px;
+}
+
+#legend {
+	background: white;
+	margin-right: 5px;
+	padding: 10px;
+	border: 2px solid black;
+	text-align: center;
+	opacity: 0.9;
+}
+
+.legendTitle {
+	font-size: 15px;
+	font-weight: bolder;
+	text-decoration: underline;
+}
+
+.favoritesMsg {
+	font-size: 15px;
+	text-align: center;
+	margin-top: 15px;
+	padding: 0px 10px;
+}
+
+.logo {
+	width: 75%;
+}
+
 /* Rest Countries/Foursquare API Error */
 .apiError {
 	font-size: 15px;
