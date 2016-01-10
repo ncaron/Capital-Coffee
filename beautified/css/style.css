@@ -1,0 +1,86 @@
+#map {
+    height: 100%;
+}
+
+.fsattr {
+    height: 25px;
+    margin-top: 10px;
+}
+
+.container-fluid {
+    height: 100%;
+    padding: 0;
+}
+
+.form-control {
+    width: 95%;
+    margin: 0 auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.list-group {
+    width: 95%;
+    margin: 0 auto;
+    margin-top: 15px;
+}
+
+button.list-group-item {
+    text-align: center;
+}
+
+.navbar-brand {
+    margin-left: 50px;
+}
+
+.navmenu-brand {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+}
+
+#map img {
+    max-width: none;
+}
+
+.faveBtn {
+    margin-bottom: 5px;
+}
+
+#legend {
+    background: white;
+    margin-right: 5px;
+    padding: 10px;
+    border: 2px solid black;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.legendTitle {
+    font-size: 15px;
+    font-weight: bolder;
+    text-decoration: underline;
+}
+
+.favoritesMsg {
+    font-size: 15px;
+    text-align: center;
+    margin-top: 15px;
+    padding: 0px 10px;
+}
+
+.logo {
+    width: 75%;
+}
+
+/* Rest Countries/Foursquare API Error */
+.apiError {
+    font-size: 15px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Map error */
+.mapError {
+    font-size: 100px;
+    text-align: center;
+}
