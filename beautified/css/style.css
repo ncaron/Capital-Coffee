@@ -43,7 +43,12 @@ button.list-group-item {
 }
 
 .faveBtn {
-    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.dropdown-menu {
+    padding: 0;
+    width: 100%;
 }
 
 #legend {

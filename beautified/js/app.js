@@ -24,6 +24,7 @@ else {
 // The capital city
 var Place = function(data) {
     this.name = ko.observable(data.capital + ', ' + data.name);
+    this.region = ko.observable(data.region);
 };
 
 // The coffee shops
@@ -45,7 +46,17 @@ var CoffeeShops = function(data) {
 var ViewModel = function() {
     var self = this;
 
-    self.placeList = ko.observableArray([]);
+    self.allPlaceList = ko.observableArray([]);
+    self.currentRegionList = ko.observable([]);
+    self.africa = ko.observableArray([]);
+    self.americas = ko.observableArray([]);
+    self.asia = ko.observableArray([]);
+    self.europe = ko.observableArray([]);
+    self.oceania = ko.observableArray([]);
+
+    self.filteredList = ko.observableArray([]);
+    self.searchValue = ko.observable();
+    
     self.coffeeShopList = ko.observableArray([]);
     self.markerList = ko.observableArray([]);
     self.latLngList = ko.observableArray([]);
@@ -174,12 +185,31 @@ var ViewModel = function() {
         else {
             self.noFavorites(true);
         }
-    }
+    };
+
+    // Sets the region
+    self.setRegion = function(region) {
+        self.coffeeShopList([]);
+        self.getMarkers();
+
+        if (region == 'Africa') {
+            self.currentRegionList(self.africa());
+        }
+        else if (region == 'Americas') {
+            self.currentRegionList(self.americas());
+        }
+        else if (region == 'Asia') {
+            self.currentRegionList(self.asia());
+        }
+        else if (region == 'Europe') {
+            self.currentRegionList(self.europe());
+        }
+        else if (region == 'Oceania') {
+            self.currentRegionList(self.oceania());
+        }
+    };
 
     /* == Filter == */
-    self.searchValue = ko.observable();
-    self.filteredList = ko.observableArray([]);
-
     self.filter = ko.computed(function() {
         // Displays a how to message to the user if no favorites are in the list
         if (self.noFavorites()) {
@@ -203,10 +233,14 @@ var ViewModel = function() {
             self.filteredList(self.coffeeShopList());
             self.getMarkers();
         }
-        // If a city has not been clicked and nothing is searched for, populate the list with cities
+         // If a city has not been clicked and nothing is searched for, populate the list with cities
         else if (self.coffeeShopList().length == 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
-            self.filteredList(self.placeList());
-
+            if (self.currentRegionList().length == 0) {
+                self.filteredList(self.allPlaceList());
+            }
+            else {
+                self.filteredList(self.currentRegionList());
+            }
         }
         // Clears the filteredList array and populates it with the names matching the search string
         // Will filter cities or coffee shops depending on previous condition
@@ -214,16 +248,20 @@ var ViewModel = function() {
             self.filteredList([]);
 
             // If coffeeShopList is bigger than 0, filter coffeeShopList
-            // Filter placeList otherwise
+            // Filter allPlaceList otherwise
             if (self.coffeeShopList().length != 0) {
                 self.filterCurrentList(self.coffeeShopList());
                 self.getMarkers();
             }
             else {
-                self.filterCurrentList(self.placeList());
+                if (self.currentRegionList().length == 0) {
+                    self.filterCurrentList(self.allPlaceList());
+                }
+                else {
+                    self.filterCurrentList(self.currentRegionList());
+                }
             }
         }
-        // This will make it easier to search for venue ids later (For other Ajax request)
         self.idList(self.filteredList());
     }, self);
 
@@ -246,8 +284,17 @@ var ViewModel = function() {
         // Resets search value
         self.searchValue('');
 
-        self.filteredList(self.placeList());
-        self.coffeeShopList([]);
+        // Displays correct list when back button is clicked
+        if (self.currentRegionList().length != 0 && self.coffeeShopList().length != 0) {
+            self.coffeeShopList([]);
+            self.filteredList(self.currentRegionList());
+        }
+        else {
+            self.currentRegionList([]);
+            self.coffeeShopList([]);
+            self.filteredList(self.allPlaceList());
+        }
+
         self.getMarkers();
 
         // Closes info window is it's opened
@@ -891,13 +938,34 @@ var ViewModel = function() {
     // Gets data from the REST Countries API
     $.getJSON(countryInfoUrl, function(data) {
         // Adds all countries to a list of places
-        var mappedPlaceList = $.map(data, function(place) {
+        var mappedAllPlaceList = $.map(data, function(place) {
             // Makes sure only countries of Europe gets added
-            if (place.region == 'Europe') {
+            if (place.capital != '' && place.region != '') {
                 return new Place(place);
             }
         });
-        self.placeList(mappedPlaceList);
+        self.allPlaceList(mappedAllPlaceList);
+    })
+    .complete(function() {
+        for (var i = 0; i < self.allPlaceList().length; i++) {
+            var currentPlace = self.allPlaceList()[i];
+
+            if (currentPlace.region() == 'Africa') {
+                self.africa().push(currentPlace);
+            }
+            else if (currentPlace.region() == 'Americas') {
+                self.americas().push(currentPlace);
+            }
+            else if (currentPlace.region() == 'Asia') {
+                self.asia().push(currentPlace);
+            }
+            else if (currentPlace.region() == 'Europe') {
+                self.europe().push(currentPlace);
+            }
+            else if (currentPlace.region() == 'Oceania') {
+                self.oceania().push(currentPlace);
+            }
+        }
     })
     .fail(function() {
         var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.'
