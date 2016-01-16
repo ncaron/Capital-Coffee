@@ -24,10 +24,22 @@
                 <img class="img-responsive center-block fsattr" src="images/foursquare.png" alt="Powered by Foursquare">
             </a>
             <input type="search" class="form-control text-center" placeholder="Search" data-bind="textInput: searchValue">
-            <button type="button" class="list-group-item hidden-md hidden-lg faveBtn" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.listFavorites"></button>
-            <button type="button" class="list-group-item hidden-xs hidden-sm faveBtn" data-bind="click: $root.listFavorites"></button>
             <button type="button" class="list-group-item hidden-md hidden-lg" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.back">BACK</button>
             <button type="button" class="list-group-item hidden-xs hidden-sm" data-bind="click: $root.back">BACK</button>
+            
+            <button type="button" class="list-group-item hidden-md hidden-lg faveBtn" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.listFavorites"></button>
+            <button type="button" class="list-group-item hidden-xs hidden-sm faveBtn" data-bind="click: $root.listFavorites"></button>
+
+            <button type="button" class="list-group-item dropdown-toggle" data-toggle="dropdown">Region <b class="caret"></b></button>
+
+            <ul class="dropdown-menu navmenu-nav list-group" role="menu">
+                <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Africa')">Africa</button></li>
+                <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Americas')">Americas</button></li>
+                <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Asia')">Asia</button></li>
+                <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Europe')">Europe</button></li>
+                <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Oceania')">Oceania</button></li>
+            </ul>
+
             <p class="apiError"></p>
             <p class="favoritesMsg"></p>
             <!-- Knockout binding to loop through filteredList -->
