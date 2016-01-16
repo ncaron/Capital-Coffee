@@ -89,3 +89,10 @@ button.list-group-item {
     font-size: 100px;
     text-align: center;
 }
+
+/* No shops found */
+.noCoffeeMsg {
+    font-size: 15px;
+    text-align: center;
+    margin-top: 15px;
+}
