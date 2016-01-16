@@ -62,6 +62,7 @@ var ViewModel = function() {
     self.latLngList = ko.observableArray([]);
     self.idList = ko.observableArray([]);
     self.foursquareError = ko.observable();
+    self.noCoffee = ko.observable(false);
     self.currentVenue = ko.observable();
     self.starClick = ko.observable(false);
     self.favoritesList = ko.observableArray([]);
@@ -189,9 +190,18 @@ var ViewModel = function() {
 
     // Sets the region
     self.setRegion = function(region) {
+        // Removes error message
+        $('.apiError').html('');
+        $('.favoritesMsg').html('');
+        $('.noCoffeeMsg').html('');
+
+        self.searchValue('');
+
         self.coffeeShopList([]);
         self.getMarkers();
-
+        self.noCoffee(false);
+        self.foursquareError(false);
+        
         if (region == 'Africa') {
             self.currentRegionList(self.africa());
         }
@@ -220,13 +230,18 @@ var ViewModel = function() {
             self.getMarkers();
             $('.favoritesMsg').html('');
             $('.apiError').html('');
+            $('.noCoffeeMsg').html('');
             $('.favoritesMsg').append(faveMsg);
             self.noFavorites(false);
         }
         // Displays error if API cannot be reached
-        else if (self.foursquareError() == true) {
+        else if (self.foursquareError()) {
             self.filteredList([]);
-            self.foursquareError(false);
+        }
+        else if (self.noCoffee()) {
+            var noCoffeeMsg = 'No coffee shops found in this capital, please press the back button and choose a different location.';
+            self.filteredList([]);
+            $('.noCoffeeMsg').append(noCoffeeMsg);
         }
         // If a city has been clicked(or populated favorite list) and nothing was searched for, populate the list with all coffee shops from this capital
         else if (self.coffeeShopList().length != 0  && self.noFavorites() == false && (self.searchValue() == '' || self.searchValue() == undefined)) {
@@ -281,11 +296,22 @@ var ViewModel = function() {
 
     /* == Back == */
     self.back = function() {
+        self.foursquareError(false);
+        
+        // Removes error message
+        $('.apiError').html('');
+        $('.favoritesMsg').html('');
+        $('.noCoffeeMsg').html('');
+
         // Resets search value
         self.searchValue('');
 
         // Displays correct list when back button is clicked
-        if (self.currentRegionList().length != 0 && self.coffeeShopList().length != 0) {
+        if (self.noCoffee()) {
+            self.noCoffee(false);
+            self.filteredList(self.currentRegionList());
+        }
+        else if (self.currentRegionList().length != 0 && self.coffeeShopList().length != 0) {
             self.coffeeShopList([]);
             self.filteredList(self.currentRegionList());
         }
@@ -301,10 +327,6 @@ var ViewModel = function() {
         if (self.infowindow != null) {
             self.infowindow.close();
         }
-
-        // Removes error message
-        $('.apiError').html('');
-        $('.favoritesMsg').html('');
     };
 
     /* == Get Coffee == */
@@ -339,6 +361,11 @@ var ViewModel = function() {
                 self.coffeeShopList(mappedCoffeeShopList);
                 self.filteredList(self.coffeeShopList());
                 self.searchValue('');
+            })
+            .complete(function() {
+                if (self.coffeeShopList().length == 0) {
+                    self.noCoffee(true);
+                }
             })
             .fail(function() {
                 self.foursquareError(true);
