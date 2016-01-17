@@ -7,13 +7,7 @@ var DEFAULT_CENTER = {
 };
 var DEFAULT_ZOOM = 5;
 
-// Handle error if map cannot be loaded
-if (google == undefined) {
-    $('.mapError').html('<p>Google Maps API cannot be reached. Please try again later.</p>');
-}
-else {
-    $('.mapError').remove();
-
+function initMap() {
     var mapOptions = {
         zoom: DEFAULT_ZOOM,
         center: DEFAULT_CENTER,
@@ -24,7 +18,14 @@ else {
 
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
-}
+
+    initialize();
+};
+
+// Handle error if map cannot be loaded
+function mapError() {
+    $('.mapError').html('<p>Google Maps API cannot be reached. Please try again later.</p>');
+};
 
 // The capital city
 var Place = function(data) {
@@ -1116,4 +1117,6 @@ var ViewModel = function() {
         });
 };
 
-ko.applyBindings(new ViewModel());
+function initialize() {
+    ko.applyBindings(new ViewModel());
+};
