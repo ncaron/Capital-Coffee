@@ -24,7 +24,8 @@ module.exports = function(grunt) {
 					'css/jasny-bootstrap.css': 'beautified/css/jasny-bootstrap.css',
 					'css/jasny-offcanvas.css': 'beautified/css/jasny-offcanvas.css',
 					'css/map.css': 'beautified/css/map.css',
-					'css/style.css': 'beautified/css/style.css'
+					'css/style.css': 'beautified/css/style.css',
+					'css/mobile.css': 'beautified/css/mobile.css'
 				}
 			}
 		},
