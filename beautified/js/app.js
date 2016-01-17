@@ -1,3 +1,5 @@
+'use strict';
+
 /* ===== Map ===== */
 var google;
 var map;
@@ -895,7 +897,7 @@ var ViewModel = function() {
             if (time == 1200) {
                 return 'Noon';
             }
-            else if (time == 0000) {
+            else if (time == 0) {
                 return 'Midnight';
             }
             else if (time >= 1200) {
@@ -911,7 +913,7 @@ var ViewModel = function() {
                 return formattedTime;
             }
             else if (time < 1000) {
-                if (time.slice(0, 2) == 00) {
+                if (time.slice(0, 2) == 0) {
                     hours = '12';
                 }
                 else {
@@ -1089,7 +1091,7 @@ var ViewModel = function() {
             self.allPlaceList(mappedAllPlaceList);
         })
         .complete(function() {
-            allPlaceListLength = self.allPlaceList().length;
+            var allPlaceListLength = self.allPlaceList().length;
             var i;
             for (i = 0; i < allPlaceListLength; i++) {
                 var currentPlace = self.allPlaceList()[i];
