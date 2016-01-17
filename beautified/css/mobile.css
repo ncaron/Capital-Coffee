@@ -1,0 +1,101 @@
+/* TITLE */
+#iw-title {
+    font-size: 20px;
+}
+
+#iw-title a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* RATING */
+#iw-rating {
+    font-size: 15px;
+}
+
+/* IS OPEN */
+#iw-isOpen {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bolder;
+}
+
+/* STATUS */
+#iw-status p {
+    font-size: 12px;
+}
+
+/* HOURS OF OPERATION */
+#iw-hoursOO {
+    font-size: 15px;
+}
+
+#iw-hours p {
+    font-size: 15px;
+}
+
+#iw-hours ul li {
+    font-size: 12px;
+}
+
+/* DESCRIPTION */
+#iw-description p:first-child {
+    font-size: 15px;
+}
+
+#iw-description p:last-child {
+    font-size: 12px;
+}
+
+/* TIPS */
+.hasTips {
+    font-size: 15px;
+}
+
+blockquote {
+    font-size: 12px;
+}
+
+/* CONTACT */
+#iw-contact {
+    font-size: 15px;
+}
+
+.fa-phone-square {
+    font-size: 35px;
+}
+
+#iw-phoneNum p {
+    font-size: 12px;
+}
+
+/* SOCIAL */
+.fa-foursquare {
+    font-size: 32px;
+}
+
+.fa-facebook-official {
+    font-size: 35px;
+}
+
+.fa-twitter {
+    font-size: 35px;
+}
+
+/* LOCATION */
+#iw-location {
+    font-size: 15px;
+}
+
+#iw-formattedAddress p {
+    font-size: 12px;
+}
+
+/* LOADING CONTENT */
+.loading {
+    font-size: 35px;
+}
+
+.iw-container {
+    max-height: none;
+}

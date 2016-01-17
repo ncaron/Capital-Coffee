@@ -294,6 +294,17 @@ var ViewModel = function() {
         }
     };
 
+    // Clicking outside the map closes the info window and stops marker animation
+    map.addListener('click', function() {
+        if (self.markerList().length != 0) {
+            for (var i = 0; i < self.markerList().length; i++) {
+                self.markerList()[i].setAnimation(null);
+            }
+        }
+        self.infowindow.close();
+    });
+
+
     /* == Back == */
     self.back = function() {
         self.foursquareError(false);
@@ -378,7 +389,7 @@ var ViewModel = function() {
 
     /* == Get Markers == */
     self.getMarkers = function() {
-        // Clears the marketList array to populate it with new markers
+        // Clears the markerList array to populate it with new markers
         for (var i = 0; i < self.markerList().length; i++) {
             self.markerList()[i].setMap(null);
         }
@@ -464,6 +475,7 @@ var ViewModel = function() {
 
     /* == Info Window == */
     self.toggleWindow = function(index) {
+        console.log(index);
         var venueError;
 
         // URL to get complete venue details
@@ -515,7 +527,8 @@ var ViewModel = function() {
                 }
 
                 // Displays venue best photo
-                if (self.currentVenue().hasOwnProperty('bestPhoto')) {
+                // Doesn't display a photo if height of screen is under 500px
+                if (self.currentVenue().hasOwnProperty('bestPhoto') && window.matchMedia('(min-height: 500px)').matches) {
                     bestPhoto = self.currentVenue().bestPhoto.prefix + 'original' + self.currentVenue().bestPhoto.suffix;
                 }
 
@@ -635,14 +648,6 @@ var ViewModel = function() {
             venueError = true;
             self.getIwContent(venueError, index, venue);
         });
-
-        // Clicking outside the map closes the info window and stops marker animation
-        if (self.coffeeShopList().length != 0) {
-            map.addListener('click', function() {
-                self.infowindow.close();
-                self.markerList()[index].setAnimation(null);
-            });
-        }
 
         self.markerAnimation = self.markerList()[index].getAnimation();
 
