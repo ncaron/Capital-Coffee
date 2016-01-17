@@ -27,6 +27,8 @@ function initMap() {
 // Handle error if map cannot be loaded
 function mapError() {
     $('.mapError').html('<p>Google Maps API cannot be reached. Please try again later.</p>');
+
+    initialize();
 };
 
 // The capital city
@@ -55,6 +57,7 @@ var ViewModel = function() {
     var self = this;
 
     self.allPlaceList = ko.observableArray([]);
+    self.countriesLoaded = ko.observable();
     self.currentRegionList = ko.observable([]);
     self.africa = ko.observableArray([]);
     self.americas = ko.observableArray([]);
@@ -208,7 +211,9 @@ var ViewModel = function() {
     // Sets the region
     self.setRegion = function(region) {
         // Removes error message
-        $('.apiError').html('');
+        if (self.countriesLoaded == false) {
+            $('.apiError').html('');
+        }
         $('.favoritesMsg').html('');
         $('.noCoffeeMsg').html('');
 
@@ -314,17 +319,19 @@ var ViewModel = function() {
     };
 
     // Clicking outside the map closes the info window and stops marker animation
-    map.addListener('click', function() {
-        if (self.markerList().length != 0) {
-            var markerListLength = self.markerList().length;
-            var i;
-
-            for (i = 0; i < markerListLength; i++) {
-                self.markerList()[i].setAnimation(null);
+    if (map != undefined) {
+            map.addListener('click', function() {
+            if (self.markerList().length != 0) {
+                var markerListLength = self.markerList().length;
+                var i;
+    
+                for (i = 0; i < markerListLength; i++) {
+                    self.markerList()[i].setAnimation(null);
+                }
             }
-        }
-        self.infowindow.close();
-    });
+            self.infowindow.close();
+        });
+    }
 
 
     /* == Back == */
@@ -332,7 +339,9 @@ var ViewModel = function() {
         self.foursquareError(false);
 
         // Removes error message
-        $('.apiError').html('');
+        if (self.countriesLoaded() == false) {
+            $('.apiError').html('');
+        }
         $('.favoritesMsg').html('');
         $('.noCoffeeMsg').html('');
 
@@ -1112,10 +1121,12 @@ var ViewModel = function() {
                     self.oceania().push(currentPlace);
                 }
             }
+            self.countriesLoaded(true);
         })
         .fail(function() {
             var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.';
             $('.apiError').append(CountriesErrorMessage);
+            self.countriesLoaded(false);
         });
 };
 
