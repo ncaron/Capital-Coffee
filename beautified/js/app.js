@@ -1,7 +1,6 @@
 'use strict';
 
 /* ===== Map ===== */
-var google;
 var map;
 var DEFAULT_CENTER = {
     lat: 47,
@@ -26,9 +25,9 @@ function initMap() {
 
 // Handle error if map cannot be loaded
 function mapError() {
-    $('.mapError').html('<p>Google Maps API cannot be reached. Please try again later.</p>');
+    var isMapError = true;
 
-    initialize();
+    initialize(isMapError);
 };
 
 // The capital city
@@ -53,11 +52,19 @@ var CoffeeShops = function(data) {
     }
 };
 
-var ViewModel = function() {
+var ViewModel = function(isMapError) {
     var self = this;
 
+    var mapErrorText = 'Google Maps API cannot be reached. Please try again later.';
+    var faveMsg = 'To add favorites, click on coffee shop name in the list or marker then click on the star next to the coffee shop name. Please click on the above back button to return to the capitals list.';
+    var foursquareErrorMsg = 'Foursquare API cannot be reached. Please try again later.';
+    var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.';
+    var noCoffeeMsg = 'No coffee shops found in this capital, please press the back button and choose a different location.';
+
+    self.mapErrorTextUpdate = ko.observable();
+    self.errorMsg = ko.observable('');
+
     self.allPlaceList = ko.observableArray([]);
-    self.countriesLoaded = ko.observable();
     self.currentRegionList = ko.observable([]);
     self.africa = ko.observableArray([]);
     self.americas = ko.observableArray([]);
@@ -87,6 +94,14 @@ var ViewModel = function() {
     var clientSecret = 'DFRQK4JG21B1ECQ104LLNMH1O5TUQ4OZC2C24AAKZCTEPJAG';
     var version = '20151221';
 
+    // If map can't be loaded, display an error message on the screen.
+    if (isMapError) {
+        self.mapErrorTextUpdate(mapErrorText);
+    }
+    else {
+        self.mapErrorTextUpdate();
+    }
+
     // Populates favoritesList array with favorites, if any is available
     if (localStorage.getItem('favoriteKey') !== null) {
         self.favoritesList(JSON.parse(localStorage.getItem('favoriteKey')));
@@ -103,7 +118,6 @@ var ViewModel = function() {
         // Sets the text of the favorite
         self.favoritesLength(self.favoritesList().length);
         self.faveBtnText('My Favorites' + ' (' + self.favoritesLength() + ')');
-        $('.faveBtn').html(self.faveBtnText());
     }, self);
 
     // Checks the list of favorites to apply appropriate CSS
@@ -211,11 +225,7 @@ var ViewModel = function() {
     // Sets the region
     self.setRegion = function(region) {
         // Removes error message
-        if (self.countriesLoaded == false) {
-            $('.apiError').html('');
-        }
-        $('.favoritesMsg').html('');
-        $('.noCoffeeMsg').html('');
+        self.errorMsg('');
 
         self.searchValue('');
 
@@ -245,15 +255,11 @@ var ViewModel = function() {
     self.filter = ko.computed(function() {
         // Displays a how to message to the user if no favorites are in the list
         if (self.noFavorites()) {
-            var faveMsg = 'To add favorites, click on coffee shop name in the list or marker then click on the star next to the coffee shop name. Please click on the above back button to return to the capitals list.';
             self.filteredList([]);
             self.coffeeShopList([]);
             self.searchValue('');
             self.getMarkers();
-            $('.favoritesMsg').html('');
-            $('.apiError').html('');
-            $('.noCoffeeMsg').html('');
-            $('.favoritesMsg').append(faveMsg);
+            self.errorMsg(faveMsg);
             self.noFavorites(false);
         }
         // Displays error if API cannot be reached
@@ -261,9 +267,8 @@ var ViewModel = function() {
             self.filteredList([]);
         }
         else if (self.noCoffee()) {
-            var noCoffeeMsg = 'No coffee shops found in this capital, please press the back button and choose a different location.';
             self.filteredList([]);
-            $('.noCoffeeMsg').append(noCoffeeMsg);
+            self.errorMsg(noCoffeeMsg);
         }
         // If a city has been clicked(or populated favorite list) and nothing was searched for, populate the list with all coffee shops from this capital
         else if (self.coffeeShopList().length != 0 && self.noFavorites() == false && (self.searchValue() == '' || self.searchValue() == undefined)) {
@@ -339,11 +344,7 @@ var ViewModel = function() {
         self.foursquareError(false);
 
         // Removes error message
-        if (self.countriesLoaded() == false) {
-            $('.apiError').html('');
-        }
-        $('.favoritesMsg').html('');
-        $('.noCoffeeMsg').html('');
+        self.errorMsg('');
 
         // Resets search value
         self.searchValue('');
@@ -410,9 +411,8 @@ var ViewModel = function() {
                 })
                 .fail(function() {
                     self.foursquareError(true);
-                    var foursquareErrorMsg = 'Foursquare API cannot be reached. Please try again later.';
 
-                    $('.apiError').append(foursquareErrorMsg);
+                    self.errorMsg(foursquareErrorMsg);
                 });
         }
     };
@@ -708,7 +708,7 @@ var ViewModel = function() {
             })
             .fail(function() {
                 venueError = true;
-                self.getIwContent(venueError, index, venue);
+                self.getIwContent(venueError, index);
             });
 
         self.markerAnimation = self.markerList()[index].getAnimation();
@@ -721,12 +721,12 @@ var ViewModel = function() {
         self.infowindow = new google.maps.InfoWindow({
             pixelOffset: new google.maps.Size(0, -10),
             content: '<div class="container iw-container">' + // .container .iw-container
-                '<div class="row">' +
-                '<div class="col-md-12 loading">' +
-                '<i class="fa fa-spinner fa-spin"></i>' +
-                '</div>' +
-                '</div>' +
-                '</div>' // End .container .iw-container
+                        '<div class="row">' +
+                            '<div class="col-md-12 loading">' +
+                                '<i class="fa fa-spinner fa-spin"></i>' +
+                            '</div>' +
+                        '</div>' +
+                      '</div>' // End .container .iw-container
         });
 
         self.infowindow.addListener('domready', function() {
@@ -1121,15 +1121,12 @@ var ViewModel = function() {
                     self.oceania().push(currentPlace);
                 }
             }
-            self.countriesLoaded(true);
         })
         .fail(function() {
-            var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.';
-            $('.apiError').append(CountriesErrorMessage);
-            self.countriesLoaded(false);
+            self.errorMsg(CountriesErrorMessage);
         });
 };
 
-function initialize() {
-    ko.applyBindings(new ViewModel());
+function initialize(isMapError) {
+    ko.applyBindings(new ViewModel(isMapError));
 };
