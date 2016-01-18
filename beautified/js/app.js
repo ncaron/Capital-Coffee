@@ -8,7 +8,7 @@ var DEFAULT_CENTER = {
 };
 var DEFAULT_ZOOM = 5;
 
-function initMap() {
+window.initMap = function() {
     var mapOptions = {
         zoom: DEFAULT_ZOOM,
         center: DEFAULT_CENTER,
@@ -24,7 +24,7 @@ function initMap() {
 };
 
 // Handle error if map cannot be loaded
-function mapError() {
+window.mapError = function() {
     var isMapError = true;
 
     initialize(isMapError);
