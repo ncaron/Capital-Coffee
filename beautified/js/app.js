@@ -1,3 +1,9 @@
+/**
+  * Niko Caron
+  * Project 5-a for Udacity's front end web developer nanodegree.
+  * Search for coffee shops in world's capitals.
+*/
+
 'use strict';
 
 /* ===== Map ===== */
@@ -8,6 +14,9 @@ var DEFAULT_CENTER = {
 };
 var DEFAULT_ZOOM = 5;
 
+/**
+  * Displays the map.
+*/
 window.initMap = function() {
     var mapOptions = {
         zoom: DEFAULT_ZOOM,
@@ -23,20 +32,32 @@ window.initMap = function() {
     initialize();
 };
 
-// Handle error if map cannot be loaded
+
+/**
+  * Sets isMapError to true.
+  * This will ensure the user has an error message(Google) when other parts of the app loads.
+*/
 window.mapError = function() {
     var isMapError = true;
 
     initialize(isMapError);
 };
 
-// The capital city
+/**
+  * The capital city model.
+  * @param data - Data received from the REST Countries API.
+*/
 var Place = function(data) {
     this.name = ko.observable(data.capital + ', ' + data.name);
     this.region = ko.observable(data.region);
 };
 
-// The coffee shops
+/**
+  * The coffee shop model.
+  * if - List of coffee shops
+  * else - List of favorite coffee shops
+  * @param data - Data received from the Foursquare API.
+*/
 var CoffeeShops = function(data) {
     if (data.hasOwnProperty('venue')) {
         this.name = ko.observable(data.venue.name);
@@ -52,18 +73,24 @@ var CoffeeShops = function(data) {
     }
 };
 
+/**
+  * The view model.
+  * @param isMapError - Detects if the map has loaded properly.
+*/
 var ViewModel = function(isMapError) {
     var self = this;
 
+    // Error messages
     var mapErrorText = 'Google Maps API cannot be reached. Please try again later.';
     var faveMsg = 'To add favorites, click on coffee shop name in the list or marker then click on the star next to the coffee shop name. Please click on the above back button to return to the capitals list.';
     var foursquareErrorMsg = 'Foursquare API cannot be reached. Please try again later.';
     var CountriesErrorMessage = 'REST Countries API cannot be reached. Please try again later.';
-    var noCoffeeMsg = 'No coffee shops found in this capital, please press the back button and choose a different location.';
+    var noCoffeeMsg = 'No coffee shops found in this capital, please click the back button and choose a different location.';
 
     self.mapErrorTextUpdate = ko.observable();
     self.errorMsg = ko.observable('');
 
+    // Regions
     self.allPlaceList = ko.observableArray([]);
     self.currentRegionList = ko.observable([]);
     self.africa = ko.observableArray([]);
@@ -73,14 +100,14 @@ var ViewModel = function(isMapError) {
     self.oceania = ko.observableArray([]);
 
     self.filteredList = ko.observableArray([]);
-    self.searchValue = ko.observable();
+    self.searchValue = ko.observable('');
 
     self.coffeeShopList = ko.observableArray([]);
     self.markerList = ko.observableArray([]);
     self.latLngList = ko.observableArray([]);
     self.idList = ko.observableArray([]);
     self.foursquareError = ko.observable();
-    self.noCoffee = ko.observable(false);
+    self.hasCoffee = ko.observable(false);
     self.currentVenue = ko.observable();
     self.starClick = ko.observable(false);
     self.favoritesList = ko.observableArray([]);
@@ -89,7 +116,7 @@ var ViewModel = function(isMapError) {
     self.favoritesLength = ko.observable();
     self.faveBtnText = ko.observable();
 
-    // Needed for Foursquare API
+    // Required for Foursquare API.
     var clientId = '5PLNSFDCFOXXWLZOHDRG33R3PLP5OULVV0NQDPLZMOCON3OL';
     var clientSecret = 'DFRQK4JG21B1ECQ104LLNMH1O5TUQ4OZC2C24AAKZCTEPJAG';
     var version = '20151221';
@@ -99,28 +126,32 @@ var ViewModel = function(isMapError) {
         self.mapErrorTextUpdate(mapErrorText);
     }
     else {
-        self.mapErrorTextUpdate();
+        self.mapErrorTextUpdate('');
     }
 
-    // Populates favoritesList array with favorites, if any is available
+    // Populates favoritesList array with favorites, if any is available.
     if (localStorage.getItem('favoriteKey') !== null) {
         self.favoritesList(JSON.parse(localStorage.getItem('favoriteKey')));
     }
 
+    /**
+      * Detects if the star icon has been clicked.
+      * Sets the text of the favorite button.
+    */
     self.favorites = ko.computed(function() {
-        // Detects if the star has been clicked
         if (self.starClick()) {
             $('#favorite').toggleClass('starred');
             self.updateFavorites();
             self.starClick(false);
         }
 
-        // Sets the text of the favorite
         self.favoritesLength(self.favoritesList().length);
         self.faveBtnText('My Favorites' + ' (' + self.favoritesLength() + ')');
     }, self);
 
-    // Checks the list of favorites to apply appropriate CSS
+    /**
+      * Checks the list of favorites to apply appropriate CSS.
+    */
     self.checkFavorites = function() {
         var currentVenueId = self.currentVenue().id;
         var isFavorite = false;
@@ -142,13 +173,14 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    // Updates favorites list when a star is clicked
+    /**
+      * Updates favorites list when a star is clicked.
+    */
     self.updateFavorites = function() {
-        // Checks if venue is already a favorite
         var isStarred = $('#favorite').hasClass('starred');
 
-        // If isStarred is true(was previously not in list of favorites), add it to the list
-        // Remove it from favorites otherwise
+        // If isStarred is true(was previously not in list of favorites), add it to the list.
+        // Else remove it from favorites.
         if (isStarred) {
             self.favoritesList().push(self.currentVenue());
             localStorage.setItem('favoriteKey', JSON.stringify(self.favoritesList()));
@@ -173,26 +205,27 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    // Applies proper marker for favorites
+    /**
+      * Applies proper marker icon for favorites.
+      * if (1) - Only triggers if favorites exists.
+    */
     self.markerIcon = function() {
         var markerListLength = self.markerList().length;
         var i;
 
-        // Only triggers if favorites exists
-        // Else set all markers to regular icon
         if (self.favoritesList().length != 0) {
             var favoritesListLength = self.favoritesList().length;
             var j;
 
-            // Iterates through all markers in the list
+            // Iterates through all markers in the list.
             for (i = 0; i < markerListLength; i++) {
                 var markerId = self.markerList()[i].markerId;
-                // Iterates through the favorite list and compare current marker with each
+
+                // Iterates through the favorite list and compare current marker with each.
                 for (j = 0; j < favoritesListLength; j++) {
                     var venueNameId = self.favoritesList()[j].name + ', ' + self.favoritesList()[j].id;
 
-                    // If current marker is in the list, set its icon to fave Icon
-                    // Else set it to regular icon
+                    // Sets the icon.
                     if (markerId === venueNameId) {
                         self.markerList()[i].setIcon('images/faveCoffee.png');
                         break;
@@ -210,9 +243,11 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    // Triggers when favorite button is pressed
+    /**
+      * Detects if favorite button is clicked.
+      * if - If favorites exists, getCoffee()
+    */
     self.listFavorites = function() {
-        // If favorites exists, get coffee
         if (self.favoritesList().length > 0) {
             self.faveBtnClick(true);
             self.getCoffee();
@@ -222,16 +257,16 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    // Sets the region
+    /**
+      * Sets the region.
+      * @param region - The selected region.
+    */
     self.setRegion = function(region) {
-        // Removes error message
         self.errorMsg('');
-
         self.searchValue('');
-
         self.coffeeShopList([]);
         self.getMarkers();
-        self.noCoffee(false);
+        self.hasCoffee(false);
         self.foursquareError(false);
 
         if (region == 'Africa') {
@@ -251,9 +286,13 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    /* == Filter == */
+    /**
+      * Detects error messages.
+      * Sets which list to filter(capital or coffee).
+    */
     self.filter = ko.computed(function() {
-        // Displays a how to message to the user if no favorites are in the list
+
+        // Displays a how to message to the user if no favorites are in the list.
         if (self.noFavorites()) {
             self.filteredList([]);
             self.coffeeShopList([]);
@@ -262,21 +301,20 @@ var ViewModel = function(isMapError) {
             self.errorMsg(faveMsg);
             self.noFavorites(false);
         }
-        // Displays error if API cannot be reached
         else if (self.foursquareError()) {
             self.filteredList([]);
         }
-        else if (self.noCoffee()) {
+        else if (self.hasCoffee()) {
             self.filteredList([]);
             self.errorMsg(noCoffeeMsg);
         }
-        // If a city has been clicked(or populated favorite list) and nothing was searched for, populate the list with all coffee shops from this capital
-        else if (self.coffeeShopList().length != 0 && self.noFavorites() == false && (self.searchValue() == '' || self.searchValue() == undefined)) {
+        // If a city has been clicked(or populated favorite list) and nothing was searched for, populate the list with all coffee shops from this capital.
+        else if (self.coffeeShopList().length != 0 && self.noFavorites() == false && self.searchValue() == '') {
             self.filteredList(self.coffeeShopList());
             self.getMarkers();
         }
-        // If a city has not been clicked and nothing is searched for, populate the list with cities
-        else if (self.coffeeShopList().length == 0 && (self.searchValue() == '' || self.searchValue() == undefined)) {
+        // If a city has not been clicked and nothing is searched for, populate the list with cities.
+        else if (self.coffeeShopList().length == 0 && self.searchValue() == '') {
             if (self.currentRegionList().length == 0) {
                 self.filteredList(self.allPlaceList());
             }
@@ -284,13 +322,12 @@ var ViewModel = function(isMapError) {
                 self.filteredList(self.currentRegionList());
             }
         }
-        // Clears the filteredList array and populates it with the names matching the search string
-        // Will filter cities or coffee shops depending on previous condition
+        // Clears the filteredList array and populates it with the names matching the search string.
         else {
             self.filteredList([]);
 
-            // If coffeeShopList is bigger than 0, filter coffeeShopList
-            // Filter allPlaceList otherwise
+            // If coffeeShopList is bigger than 0, filter coffeeShopList.
+            // Else filter allPlaceList.
             if (self.coffeeShopList().length != 0) {
                 self.filterCurrentList(self.coffeeShopList());
                 self.getMarkers();
@@ -307,16 +344,18 @@ var ViewModel = function(isMapError) {
         self.idList(self.filteredList());
     }, self);
 
-    // Function to filter the current list
-    // Avoids repetition in self.filter
+    /**
+      * Filters the selected list.
+      * Changes names to lower case for easier filtering.
+      * @param currentList - Current list to filter(capital or coffee).
+    */
     self.filterCurrentList = function(currentList) {
         var currentListLength = currentList.length;
         var i;
+
         for (i = 0; i < currentListLength; i++) {
-            // Place name and search string converted to lowercase for easier searching
             var name = currentList[i].name().toLowerCase();
 
-            // Populates the filteredList array with place names matching search term
             if (name.includes(self.searchValue().toLowerCase())) {
                 self.filteredList.push(currentList[i]);
             }
@@ -325,11 +364,11 @@ var ViewModel = function(isMapError) {
 
     // Clicking outside the map closes the info window and stops marker animation
     if (map != undefined) {
-            map.addListener('click', function() {
+        map.addListener('click', function() {
             if (self.markerList().length != 0) {
                 var markerListLength = self.markerList().length;
                 var i;
-    
+
                 for (i = 0; i < markerListLength; i++) {
                     self.markerList()[i].setAnimation(null);
                 }
@@ -339,19 +378,17 @@ var ViewModel = function(isMapError) {
     }
 
 
-    /* == Back == */
+    /**
+      * Displays correct region list when back button is clicked.
+    */
     self.back = function() {
         self.foursquareError(false);
-
-        // Removes error message
         self.errorMsg('');
 
-        // Resets search value
         self.searchValue('');
 
-        // Displays correct list when back button is clicked
-        if (self.noCoffee()) {
-            self.noCoffee(false);
+        if (self.hasCoffee()) {
+            self.hasCoffee(false);
             self.filteredList(self.currentRegionList());
         }
         else if (self.currentRegionList().length != 0 && self.coffeeShopList().length != 0) {
@@ -366,16 +403,18 @@ var ViewModel = function(isMapError) {
 
         self.getMarkers();
 
-        // Closes info window is it's opened
         if (self.infowindow != null) {
             self.infowindow.close();
         }
     };
 
-    /* == Get Coffee == */
+    /**
+      * Gets the list of coffee shops for clicked capital.
+      * @param index - The index of the clicked capital.
+    */
     self.getCoffee = function(index) {
-        // If favorites are clicked on and exist, populate arrays with favorites data
-        // Else populate arrays with new capital coffee data
+        // If favorites are clicked on and exist, populate arrays with favorites data.
+        // Else populate arrays with new capital coffee data.
         if (self.faveBtnClick()) {
             self.faveBtnClick(false);
 
@@ -389,14 +428,18 @@ var ViewModel = function(isMapError) {
         else if (self.coffeeShopList().length == 0) {
             var cityAddress = self.filteredList()[index].name();
 
-            // Foursquare API URL
             var foursquareUrl = 'https://api.foursquare.com/v2/venues/explore?near=' + cityAddress + '&section=coffee&limit=25&client_id=' +
                                 clientId + '&client_secret=' + clientSecret + '&v=' + version;
 
 
-            // Gets data from the Foursquare API
+            /**
+              * Gets data from the Foursquare API.
+              * Adds all coffee shops to an array.
+              * Displays error message if request fails.
+              * @param foursquareUrl - Foursquare URL used for the Ajax request.
+              * @param data - Data received from the Foursquare API.
+            */
             $.getJSON(foursquareUrl, function(data) {
-                    // Adds all coffee shops to an array
                     var mappedCoffeeShopList = $.map(data.response.groups[0].items, function(coffee) {
                         return new CoffeeShops(coffee);
                     });
@@ -406,22 +449,24 @@ var ViewModel = function(isMapError) {
                 })
                 .complete(function() {
                     if (self.coffeeShopList().length == 0) {
-                        self.noCoffee(true);
+                        self.hasCoffee(true);
                     }
                 })
                 .fail(function() {
                     self.foursquareError(true);
-
                     self.errorMsg(foursquareErrorMsg);
                 });
         }
     };
 
-    /* == Get Markers == */
+    /**
+      * Gets markers and adds them to a list.
+    */
     self.getMarkers = function() {
         var markerListLength = self.markerList().length;
         var i;
-        // Clears the markerList array to populate it with new markers
+
+        // Clears the markerList array to populate it with new markers.
         for (i = 0; i < markerListLength; i++) {
             self.markerList()[i].setMap(null);
         }
@@ -429,7 +474,8 @@ var ViewModel = function(isMapError) {
 
         if (self.coffeeShopList().length != 0) {
             var filteredListLength = self.filteredList().length;
-            // Populates the marker list with corresponding city/filter
+
+            // Populates the marker list with corresponding city/filter.
             for (i = 0; i < filteredListLength; i++) {
                 var coffeeShopName = self.filteredList()[i].name();
                 var coffeeShopId = self.filteredList()[i].venueId();
@@ -450,9 +496,12 @@ var ViewModel = function(isMapError) {
         self.placeMarkers();
     };
 
-    /* == Place Markers == */
+    /**
+      * Places markers on the map.
+    */
     self.placeMarkers = function() {
-        // Resets to default map position when no coffee shops are present
+
+        // Resets to default map position when no coffee shops are present.
         if (self.coffeeShopList().length == 0) {
             map.setCenter(DEFAULT_CENTER);
             map.setZoom(DEFAULT_ZOOM);
@@ -461,7 +510,6 @@ var ViewModel = function(isMapError) {
             var markerListLength = self.markerList().length;
             var i;
 
-            // Places the markers on the map
             for (i = 0; i < markerListLength; i++) {
                 self.markerList()[i].setMap(map);
 
@@ -478,13 +526,16 @@ var ViewModel = function(isMapError) {
         }
     };
 
+    /**
+      * Sets the bounds of the map.
+    */
     self.setBounds = function() {
         self.latLngList([]);
         self.bounds = new google.maps.LatLngBounds();
         var markerListLength = self.markerList().length;
         var i;
 
-        // Puts the position of all markers into a latLngList array
+        // Puts the position of all markers into a latLngList array.
         for (i = 0; i < markerListLength; i++) {
             var markerPosition = {
                 lat: self.markerList()[i].position.lat(),
@@ -495,23 +546,24 @@ var ViewModel = function(isMapError) {
 
         var latLntListLength = self.latLngList().length;
 
-        // Uses the marker position in LatLngList to extend the bounds of the map
+        // Uses the marker position in LatLngList to extend the bounds of the map.
         for (i = 0; i < latLntListLength; i++) {
             self.bounds.extend(self.latLngList()[i]);
         }
         map.fitBounds(self.bounds);
     };
 
-    /* == Bounce == */
+    /**
+      * Toggles the bouncing motion of the marker.
+      * @param index - Index of the clicked marker/list item.
+    */
     self.toggleBounce = function(index) {
         var markerListLength = self.markerList().length;
         var i;
-        // Iterates through all markers on the map
+
         for (i = 0; i < markerListLength; i++) {
             var currentMarker = self.markerList()[i];
 
-            // Sets animation of clicked marker to bounce
-            // Else sets the marker animation to null (also does this if clicked marker is already bouncing)
             if (i == index && currentMarker.getAnimation() == null) {
                 currentMarker.setAnimation(google.maps.Animation.BOUNCE);
             }
@@ -521,18 +573,25 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    /* == Info Window == */
+    /**
+      * Toggles the info window.
+      * @param index - Index of the clickd marker/list item.
+    */
     self.toggleWindow = function(index) {
         var venueError;
 
-        // URL to get complete venue details
+        // URL to get complete venue details.
         var venueId = self.idList()[index].venueId();
         var getVenue = '/venues/' + venueId;
         var getHours = '/venues/' + venueId + '/hours';
         var venueIdUrl = 'https://api.foursquare.com/v2/multi?requests=' + getVenue + ',' + getHours +
                          '&client_id=' + clientId + '&client_secret=' + clientSecret + '&v=' + version;
 
-        // Get data from the Foursquare API
+        /**
+          * Gets data from the Foursquare API.
+          * Triggers default info window content if failed.
+          * @param venueIdUrl - Foursquare URL used for the Ajax request.
+        */
         $.ajax({
                 url: venueIdUrl,
                 dataType: 'json',
@@ -544,7 +603,7 @@ var ViewModel = function(isMapError) {
 
                     self.getIwContent(venueError, index);
 
-                    // Complete venue details
+                    // Complete venue details.
                     var name = self.currentVenue().name;
                     var rating = self.currentVenue().rating;
                     var bestPhoto;
@@ -556,8 +615,8 @@ var ViewModel = function(isMapError) {
                     var phone;
                     var formattedAddress;
 
-                    // Displays venue name
-                    // Adds link if venue has URL
+                    // Displays venue name.
+                    // Adds link if venue has URL.
                     if (self.currentVenue().hasOwnProperty('url')) {
                         var venueUrl = self.currentVenue().url;
                         $('#iw-title').prepend('<a href="' + venueUrl + '" target="_blank">' + name + '</a>');
@@ -566,7 +625,7 @@ var ViewModel = function(isMapError) {
                         $('#iw-title').prepend(name);
                     }
 
-                    // Displays venue rating
+                    // Displays venue rating.
                     if (rating != undefined) {
                         $('#iw-rating').append(rating + '/10');
                     }
@@ -574,8 +633,8 @@ var ViewModel = function(isMapError) {
                         $('#iw-rating').append('No rating to show.');
                     }
 
-                    // Displays venue best photo
-                    // Doesn't display a photo if height of screen is under 500px
+                    // Displays venue best photo.
+                    // Doesn't display a photo if height of screen is under 500px.
                     if (self.currentVenue().hasOwnProperty('bestPhoto') && window.matchMedia('(min-height: 500px)').matches) {
                         bestPhoto = self.currentVenue().bestPhoto.prefix + 'original' + self.currentVenue().bestPhoto.suffix;
                     }
@@ -584,13 +643,13 @@ var ViewModel = function(isMapError) {
                         $('#iw-photo').append('<img src="' + bestPhoto + '"style="width:100%; height: auto, display: block">');
                     }
                     else {
-                        // Removes the div if there is no photo
                         $('#iw-photo').remove();
-                        // Changes the class for hours if to center the content
+
+                        // Changes the class for hours to center the content.
                         $('#hasPhoto').toggleClass('col-md-5 col-md-12');
                     }
 
-                    // Displays isOpen and status if available. Removes the div otherwise
+                    // Displays isOpen and status if available.
                     if (self.currentVenue().hasOwnProperty('hours')) {
                         if (self.currentVenue().hours.isOpen == true) {
                             $('#iw-isOpen').prepend('<p>Open Now</p>').css({
@@ -614,7 +673,7 @@ var ViewModel = function(isMapError) {
                         $('#iw-isOpen').remove();
                     }
 
-                    // Displays venue hours
+                    // Displays venue hours.
                     if (venueHours.hasOwnProperty('timeframes')) {
                         var timeframes = venueHours.timeframes;
                         var timeframesLength = timeframes.length;
@@ -640,13 +699,11 @@ var ViewModel = function(isMapError) {
                         }
                     }
                     else {
-                        // Removes the list and informs that there's no information
                         $('#iw-hours ul').remove();
                         $('#iw-hours').append('<p>No information available</p>');
                     }
 
-                    // Displays description
-                    // Removes the div in none is available
+                    // Displays description.
                     if (self.currentVenue().hasOwnProperty('description')) {
                         venueDescription = self.currentVenue().description;
                         $('#iw-description').append('<p>About</p>');
@@ -656,8 +713,7 @@ var ViewModel = function(isMapError) {
                         $('#iw-description').remove();
                     }
 
-                    // Displays tips
-                    // Remove the div if none is available
+                    // Displays tips.
                     if (tipCount == 0) {
                         $('#iw-tips').remove();
                     }
@@ -667,8 +723,7 @@ var ViewModel = function(isMapError) {
                         $('#iw-tips').prepend('<p class="hasTips">What others have to say</p>');
                     }
 
-                    // Displays phone number
-                    // Remove the divs otherwise
+                    // Displays phone number.
                     if (self.currentVenue().contact.hasOwnProperty('formattedPhone')) {
                         phone = self.currentVenue().contact.formattedPhone;
                         $('#iw-phoneIcon').append('<i class="fa fa-phone-square"></i>');
@@ -679,21 +734,22 @@ var ViewModel = function(isMapError) {
                         $('#iw-phoneNum').remove();
                     }
 
-                    // Displays Foursquare icon
+                    // Displays Foursquare icon.
                     $('#iw-social').append('<a href="' + canonicalUrl + '" target="_blank"><i class="fa fa-foursquare"></i></a>');
 
-                    // Displays Facebook icon
+                    // Displays Facebook icon.
                     if (self.currentVenue().contact.hasOwnProperty('facebook')) {
                         var facebookId = self.currentVenue().contact.facebook;
                         $('#iw-social').append('<a href="https://www.facebook.com/' + facebookId + '" target="_blank"><i class="fa fa-facebook-official"></i></a>');
                     }
 
-                    // Displays Twitter icon
+                    // Displays Twitter icon.
                     if (self.currentVenue().contact.hasOwnProperty('twitter')) {
                         var twitterId = self.currentVenue().contact.twitter;
                         $('#iw-social').append('<a href="https://www.twitter.com/' + twitterId + '" target="_blank"><i class="fa fa-twitter"></i></a>');
                     }
 
+                    // Displays address.
                     if (self.currentVenue().location.hasOwnProperty('formattedAddress')) {
                         var formattedAddressLength = self.currentVenue().location.formattedAddress.length;
 
@@ -713,50 +769,59 @@ var ViewModel = function(isMapError) {
 
         self.markerAnimation = self.markerList()[index].getAnimation();
 
-        // If a info window is opened when another wants to open, close it
         if (self.infowindow != null) {
             self.infowindow.close();
         }
 
         self.infowindow = new google.maps.InfoWindow({
             pixelOffset: new google.maps.Size(0, -10),
-            content: '<div class="container iw-container">' + // .container .iw-container
+            content: '<div class="container iw-container">' +
                         '<div class="row">' +
                             '<div class="col-md-12 loading">' +
                                 '<i class="fa fa-spinner fa-spin"></i>' +
                             '</div>' +
                         '</div>' +
-                      '</div>' // End .container .iw-container
+                      '</div>'
         });
 
+        /**
+          * Removes info window background shadow.
+          * Removes info window white background.
+          * Puts a border around the arrow to match the info window style.
+        */
         self.infowindow.addListener('domready', function() {
             $('.gm-style-iw').next('div').hide();
 
-            // The next 5 lines of code are taken from a tutorial website, modified to my style
+            // The following lines of code are taken from a tutorial website, modified to my style.
             // http://en.marnoto.com/2014/09/5-formas-de-personalizar-infowindow.html
             var iwOuter = $('.gm-style-iw');
             var iwBackground = iwOuter.prev();
-            // Removes info window background shadow
+
             iwBackground.children(':nth-child(2)').css({
                 'display': 'none'
             });
-            // Remove infow window white background
+
             iwBackground.children(':nth-child(4)').css({
                 'display': 'none'
             });
-            // Put a border around the arrow to match the info window style
+
             iwBackground.children(':nth-child(3)').find('div').children().css({
                 'border': '2px solid orange'
             });
         });
 
-
-        // Opens info window on top of corresponding marker
         if (self.infowindow != null) {
             self.infowindow.open(map, self.markerList()[index]);
         }
 
-        // Sets content to display in info window
+        /**
+          * Gets the content of the info window.
+          * Reopens window to make all content visible on screen.
+          * Makes the star icon clickable.
+          * @param venueError - If there was an API error or not.
+          * @param index - Index of clicked marker/info window.
+          * @param venue - Venue that has been clicked.
+        */
         self.getIwContent = function(venueError, index, venue) {
             var contentString;
 
@@ -834,10 +899,9 @@ var ViewModel = function(isMapError) {
                                     '</div>' +
                                 '</div>'; // End .container .iw-container
 
-                // Reopens window to make all content visible on screen
                 self.infowindow.open(map, self.markerList()[index]);
 
-                // If marker animation stops (clicks on marker or list), close info window
+                // If marker animation stops (clicks on marker or list), close info window.
                 if (self.markerAnimation == null) {
                     self.infowindow.close();
                 }
@@ -858,17 +922,19 @@ var ViewModel = function(isMapError) {
                 self.infowindow.open(map, self.markerList()[index]);
             }
 
-            // Reopens window to make all content visible on screen
             self.infowindow.setContent(contentString);
 
-            // Makes the star clickable
             $('#favorite').click(function() {
                 self.starClick(true);
             });
         };
 
 
-        // Turns machine readable day to human readable day
+        /**
+          * Turns machine readable day to human readable day.
+          * @param dayNumber - The number of the day(1 = Monday, 7 = Sunday).
+          * @return Day string corresponding to dayNumber.
+        */
         self.getDay = function(dayNumber) {
             if (dayNumber == 1) {
                 return 'Monday';
@@ -893,12 +959,16 @@ var ViewModel = function(isMapError) {
             }
         };
 
-        // Turns machine readable time to human readable time
+        /**
+          * Turns machine readable time to human readable time.
+          * @param time - Machine time.
+          * @return Human readable time based on machine time.
+        */
         self.getTime = function(time) {
             var firstChar = time.slice(0, 1);
             var hours, minutes, formattedTime;
 
-            // Some firstChar is +, this eliminates problems with that
+            // Some firstChar is +, this eliminates problems with that.
             if (firstChar == '+') {
                 time = time.slice(1);
             }
@@ -947,7 +1017,13 @@ var ViewModel = function(isMapError) {
             }
         };
 
-        // Replaces hardcoded data with fetched data
+        /**
+          * Replaces hardcoded data with fetched data.
+          * @param day - Human readable day.
+          * @param startTime - Human readable startTime.
+          * @param endTime - Human readable endTime.
+          * @param k - Timeframe number.
+        */
         self.appendHours = function(day, startTime, endTime, k) {
             if (k == 0) {
                 if (day == 'Monday') {
@@ -972,7 +1048,6 @@ var ViewModel = function(isMapError) {
                     $('#sun').replaceWith('<li><span>' + day + '</span><div>' + startTime + ' - ' + endTime + '</div></li>');
                 }
             }
-            // Makes sure it's formatted nicely if there's 2 timeframes
             else {
                 if (day == 'Monday') {
                     $('#monExtra').replaceWith('<li><span style="visibility:hidden">AND</span><div>' + startTime + ' - ' + endTime + '</div></li>');
@@ -998,7 +1073,10 @@ var ViewModel = function(isMapError) {
             }
         };
 
-        // Fetches tip text and user
+        /**
+          * Fetches tip text and user.
+          * @param tips - Array of tips.
+        */
         self.getTips = function(tips) {
             var text;
             var firstName;
@@ -1018,7 +1096,7 @@ var ViewModel = function(isMapError) {
             for (i = 0; i < length; i++) {
                 text = tips[i].text;
 
-                // Determines if the tipper has first and last name
+                // Determines if the tipper has first and last name.
                 if (tips[i].hasOwnProperty('user')) {
                     if (tips[i].user.hasOwnProperty('firstName')) {
                         firstName = tips[i].user.firstName;
@@ -1039,7 +1117,7 @@ var ViewModel = function(isMapError) {
                     lastName = '';
                 }
 
-                // Formats the name of the tipper
+                // Formats the name of the tipper.
                 if (firstName != '' && lastName != '') {
                     formattedName = firstName + ' ' + lastName;
                 }
@@ -1057,14 +1135,20 @@ var ViewModel = function(isMapError) {
             }
         };
 
-        // Appends tips to the screen
+        /**
+          * Appends tips to the screen.
+          * Makes sure there's no horizontal rule below last entry.
+          * @param text - Text of the tip.
+          * @param formattedName - Formatted name of the tipper.
+          * @param length - Length of the tips array.
+          * @param index - Index of clicked marker/list item.
+        */
         self.appendTips = function(text, formattedName, length, index) {
             var formattedTip = '<blockquote>' +
                 '<p>' + text + '</p>' +
                 '<footer>' + formattedName + '</footer>' +
                 '</blockquote>';
 
-            // Makes sure there's no horizontal rule below last entry
             if (length - 1 != index) {
                 $('#iw-tips').append(formattedTip + '<hr>');
             }
@@ -1074,7 +1158,11 @@ var ViewModel = function(isMapError) {
         };
     };
 
-    // When a list item is clicked, getCoffee. toggleBounce otherwise
+    /**
+      * When a list item is clicked, getCoffee.
+      * Else toggleBounce.
+      * @param index - Index of the clicked list item.
+    */
     self.onListClick = function(index) {
         if (self.markerList() == 0) {
             self.getCoffee(index);
@@ -1085,14 +1173,18 @@ var ViewModel = function(isMapError) {
         }
     };
 
-    // REST Countries API URL
     var countryInfoUrl = 'https://restcountries.eu/rest/v1/all';
 
-    // Gets data from the REST Countries API
+    /**
+      * Gets data from the REST Countries API.
+      * Adds all places to an array.
+      * Adds different regions to different arrays if completed.
+      * Displays error message if failed.
+      * @param countryInfoUrl - URL of the REST Countries API.
+      * @param data - Data received from the REST Countries API.
+    */
     $.getJSON(countryInfoUrl, function(data) {
-            // Adds all countries to a list of places
             var mappedAllPlaceList = $.map(data, function(place) {
-                // Makes sure only countries of Europe gets added
                 if (place.capital != '' && place.region != '') {
                     return new Place(place);
                 }
@@ -1102,6 +1194,7 @@ var ViewModel = function(isMapError) {
         .complete(function() {
             var allPlaceListLength = self.allPlaceList().length;
             var i;
+
             for (i = 0; i < allPlaceListLength; i++) {
                 var currentPlace = self.allPlaceList()[i];
 
@@ -1127,6 +1220,10 @@ var ViewModel = function(isMapError) {
         });
 };
 
+/**
+  * Initializes the app.
+  * @param isMapError - Will display a message if the map has not loaded.
+*/
 function initialize(isMapError) {
     ko.applyBindings(new ViewModel(isMapError));
-};
+}
