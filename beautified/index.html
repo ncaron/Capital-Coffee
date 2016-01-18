@@ -27,8 +27,8 @@
             <input type="search" class="form-control text-center" placeholder="Search" data-bind="textInput: searchValue">
             <button type="button" class="list-group-item" data-bind="click: $root.back">BACK</button>
 
-            <button type="button" class="list-group-item hidden-md hidden-lg faveBtn" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.listFavorites"></button>
-            <button type="button" class="list-group-item hidden-xs hidden-sm faveBtn" data-bind="click: $root.listFavorites"></button>
+            <button type="button" class="list-group-item hidden-md hidden-lg faveBtn" data-toggle="offcanvas" data-target=".navmenu" data-bind="click: $root.listFavorites, text: faveBtnText"></button>
+            <button type="button" class="list-group-item hidden-xs hidden-sm faveBtn" data-bind="click: $root.listFavorites, text: faveBtnText"></button>
 
             <button type="button" class="list-group-item dropdown-toggle" data-toggle="dropdown">Region <b class="caret"></b></button>
 
@@ -40,9 +40,8 @@
                 <li><button type="button" class="list-group-item" data-bind="click: $root.setRegion.bind($data, 'Oceania')">Oceania</button></li>
             </ul>
 
-            <p class="apiError"></p>
-            <p class="favoritesMsg"></p>
-            <p class="noCoffeeMsg"></p>
+            <p class="errorMsg" data-bind="text: errorMsg"></p>
+
             <!-- Knockout binding to loop through filteredList -->
             <div class="list-group" data-bind="foreach: filteredList">
                 <!-- Knockout binding sets # of buttons = # 'filteredList' and sets the text of 'filteredList' 'name' -->
@@ -69,8 +68,8 @@
     <!-- Google Maps -->
     <div class="container-fluid">
         <div id="map">
-            <div class="row mapError">
-                <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12 mapError" data-bind="text: mapErrorTextUpdate">
                     <i class="fa fa-spinner fa-spin"></i>
                 </div>
             </div>
