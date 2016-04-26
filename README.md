@@ -1,7 +1,7 @@
 # How To Run
-* Download all files [here](https://github.com/ncaron/Neighbourhood-Map/archive/master.zip)
+* Download all files [here](https://github.com/ncaron/Capital-Coffee/archive/master.zip)
 * Open index.html in your browser
-* You can also click [here](http://ncaron.github.io/Neighbourhood-Map/) to access the site without downloading
+* You can also click [here](http://ncaron.github.io/Capital-Coffee/) to access the site without downloading
 
 # How To Use Build Tools (Grunt)
 * Install [node.js](http://nodejs.org)
