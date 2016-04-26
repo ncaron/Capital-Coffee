@@ -21,6 +21,7 @@ window.initMap = function() {
     var mapOptions = {
         zoom: DEFAULT_ZOOM,
         center: DEFAULT_CENTER,
+        clickableIcons: false,
         mapTypeControlOptions: {
             position: google.maps.ControlPosition.TOP_RIGHT
         }
